@@ -10,5 +10,5 @@ npm install
 ## Run local server
 
 ```
-parcel index.html
+npm run serve
 ```

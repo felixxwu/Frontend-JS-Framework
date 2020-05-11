@@ -1,5 +1,5 @@
+// state.js is a singleton object, so it can be imported everywhere and share the same state
 export default {
-    // initial values
     init(framework) {
         this.framework = framework
         this.selected = null;
@@ -7,6 +7,7 @@ export default {
         this.page = '1'
     },
 
+    // methods for modifying the state
     get actions() {
         return {
             select: number => {
@@ -22,6 +23,7 @@ export default {
         }
     },
 
+    // computed css variables, which are injected into the DOM for css files to use
     get cssVars() {
         return {
             bg: (

@@ -124,8 +124,8 @@ Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+// state.js is a singleton object, so it can be imported everywhere and share the same state
 var _default = {
-  // initial values
   init: function init(framework) {
     this.framework = framework;
     this.selected = null;
@@ -133,6 +133,7 @@ var _default = {
     this.page = '1';
   },
 
+  // methods for modifying the state
   get actions() {
     var _this = this;
 
@@ -156,6 +157,7 @@ var _default = {
     };
   },
 
+  // computed css variables, which are injected into the DOM for css files to use
   get cssVars() {
     return {
       bg: this.selected === 0 && 'red' || this.selected === 1 && 'green' || this.selected === 2 && 'blue' || 'white',
@@ -217,24 +219,25 @@ var Framework = /*#__PURE__*/function () {
       el.setAttribute('style', style);
       console.log('Render took', Math.round(performance.now() - t0), 'ms');
     }
-    /*
-    Returns a node from a component.
-    A component has the following structure:
-    { text: string } OR
-    {
-        tag: string,
-        attrs?: {
-            attribute: value,
-            ...
-        },
-        events?: {
-            eventName: handler,
-            ...
-        },
-        child?: Component,
-        children?: [Component, ...]
-    }
-    */
+    /***************************************************************************************
+     * Returns a node from a component.
+     * 
+     * A component has the following structure:
+     * { text: string } OR
+     * {
+     *  tag: string,
+     *  attrs?: {
+     *      attribute: value,
+     *      ...
+     *  },
+     *  events?: {
+     *      eventName: handler,
+     *      ...
+     *  },
+     *  child?: Component,
+     *  children?: [Component, ...]
+     * }
+     **************************************************************************************/
 
   }, {
     key: "renderComponent",
@@ -468,7 +471,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 
 // render into the div with id='app'
 new _Framework.default('app', _App.default).render();
-},{"./Framework":"Framework.js","./components/App":"components/App.js"}],"../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+},{"./Framework":"Framework.js","./components/App":"components/App.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -496,7 +499,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62643" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63223" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -672,5 +675,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
+},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
 //# sourceMappingURL=/framework.e31bb0bc.js.map

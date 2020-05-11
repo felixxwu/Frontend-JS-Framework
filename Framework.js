@@ -25,24 +25,25 @@ export default class Framework {
         console.log('Render took', Math.round(performance.now() - t0), 'ms')
     }
 
-    /*
-    Returns a node from a component.
-    A component has the following structure:
-    { text: string } OR
-    {
-        tag: string,
-        attrs?: {
-            attribute: value,
-            ...
-        },
-        events?: {
-            eventName: handler,
-            ...
-        },
-        child?: Component,
-        children?: [Component, ...]
-    }
-    */
+    /***************************************************************************************
+     * Returns a node from a component.
+     * 
+     * A component has the following structure:
+     * { text: string } OR
+     * {
+     *  tag: string,
+     *  attrs?: {
+     *      attribute: value,
+     *      ...
+     *  },
+     *  events?: {
+     *      eventName: handler,
+     *      ...
+     *  },
+     *  child?: Component,
+     *  children?: [Component, ...]
+     * }
+     **************************************************************************************/
     renderComponent(component) {
         if (component.text !== undefined) return document.createTextNode(component.text)
 
