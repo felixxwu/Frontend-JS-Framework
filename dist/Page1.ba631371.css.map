@@ -1,0 +1,1 @@
+{"version":3,"sources":["components/Page1.css"],"names":[],"mappings":"AAAA;AACA;AACA;AACA;AACA;AACA;AACA;AACA","file":"Page1.ba631371.css","sourceRoot":"..","sourcesContent":["#app {\r\n    width: var(--width);\r\n    height: 600px;\r\n    border: 1px solid grey;\r\n    background-color: var(--bg);\r\n    opacity: var(--opacity);\r\n    transition: 1s;\r\n}"]}

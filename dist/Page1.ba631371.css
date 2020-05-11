@@ -1,0 +1,10 @@
+#app {
+    width: var(--width);
+    height: 600px;
+    border: 1px solid grey;
+    background-color: var(--bg);
+    opacity: var(--opacity);
+    transition: 1s;
+}
+
+/*# sourceMappingURL=/Page1.ba631371.css.map */

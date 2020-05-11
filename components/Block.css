@@ -1,0 +1,15 @@
+.block {
+    width: 400px;
+    height: 100px;
+    background-color: #eee;
+    margin: 10px;
+    padding: 10px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.block.selected {
+    background-color: #ddd;
+    height: 200px;
+    transition: 0.2s;
+}

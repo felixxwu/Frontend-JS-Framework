@@ -1,0 +1,11 @@
+@import './Block.css';
+@import './SmallSquare.css';
+
+#app {
+    width: var(--width);
+    height: 600px;
+    border: 1px solid grey;
+    background-color: var(--bg);
+    opacity: var(--opacity);
+    transition: var(--transitionSpeed);
+}
