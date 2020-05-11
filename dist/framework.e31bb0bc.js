@@ -199,46 +199,72 @@ var Framework = /*#__PURE__*/function () {
     _State.default.init(this);
 
     this.rootComponent = rootComponent;
-  }
+  } // renders nodes into this.id
+
 
   _createClass(Framework, [{
     key: "render",
     value: function render() {
-      var t0 = performance.now();
+      var t0 = performance.now(); // delete element content and add the new render
+
       var el = document.getElementById(this.id);
       el.textContent = '';
-      el.appendChild(this.renderComponent(this.rootComponent()));
+      el.appendChild(this.renderComponent(this.rootComponent())); // update the css variables
+
       var style = Object.keys(_State.default.cssVars).map(function (name) {
         return "--".concat(name, ": ").concat(_State.default.cssVars[name]);
       }).join('; ');
       el.setAttribute('style', style);
       console.log('Render took', Math.round(performance.now() - t0), 'ms');
     }
+    /*
+    Returns a node from a component.
+    A component has the following structure:
+    { text: string } OR
+    {
+        tag: string,
+        attrs?: {
+            attribute: value,
+            ...
+        },
+        events?: {
+            eventName: handler,
+            ...
+        },
+        child?: Component,
+        children?: [Component, ...]
+    }
+    */
+
   }, {
     key: "renderComponent",
     value: function renderComponent(component) {
       var _this = this;
 
       if (component.text !== undefined) return document.createTextNode(component.text);
-      var el = document.createElement(component.tag);
+      if (component.tag === undefined) throw 'must specify a tag for non-text components';
+      var el = document.createElement(component.tag); // add all the attrs using element.setAttribute()
 
       if (component.attrs !== undefined) {
         Object.keys(component.attrs).forEach(function (attrName) {
           var attrValue = component.attrs[attrName];
           el.setAttribute(attrName, attrValue);
         });
-      }
+      } // add all the event listeners using element.addEventListener()
+
 
       if (component.events !== undefined) {
         Object.keys(component.events).forEach(function (event) {
           var handler = component.events[event];
           el.addEventListener(event, handler);
         });
-      }
+      } // add a single child component
+
 
       if (component.child !== undefined) {
         el.appendChild(this.renderComponent(component.child));
-      }
+      } // add an array of children components
+
 
       if (component.children !== undefined) {
         component.children.forEach(function (child) {
@@ -392,7 +418,7 @@ function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToAr
 function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
 
 var _default = function _default() {
-  var numSquares = 50000;
+  var numSquares = 10000;
   return {
     tag: 'div',
     children: [{
@@ -440,6 +466,7 @@ var _App = _interopRequireDefault(require("./components/App"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+// render into the div with id='app'
 new _Framework.default('app', _App.default).render();
 },{"./Framework":"Framework.js","./components/App":"components/App.js"}],"../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
@@ -469,7 +496,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "58799" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "62643" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
