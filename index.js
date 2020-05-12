@@ -1,6 +1,6 @@
 import Framework from './Framework'
-import State from './State'
 import App from './components/App'
+import StateConfig from './StateConfig'
 
 // render into the div with id='app'
-(new Framework('app', State, App)).render()
+Framework.init(App, 'app', StateConfig)

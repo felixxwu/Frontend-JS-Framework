@@ -127,221 +127,343 @@ exports.default = void 0;
 
 function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
-function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
+var Framework = {
+  init: function init(root, id, stateConfig) {
+    var _this = this;
 
-function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
-
-function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
-
-var Framework = /*#__PURE__*/function () {
-  function Framework(id, state, rootComponent) {
-    _classCallCheck(this, Framework);
-
-    state.init(this);
+    this.root = root;
     this.id = id;
-    this.rootComponent = rootComponent;
-    this.componentId = 0;
-    this.oldStyles = {};
-    this.styles = {};
-  } // renders nodes into this.id
-
-
-  _createClass(Framework, [{
-    key: "render",
-    value: function render() {
-      var _this = this;
-
-      var t0 = performance.now(); // delete element content and add the new render
-
-      this.componentId = 0;
-      var el = document.getElementById(this.id);
-      el.textContent = '';
-      el.appendChild(this.renderComponent(this.rootComponent()));
-      setTimeout(function () {
-        Object.keys(_this.styles).forEach(function (id) {
-          document.getElementById(id).style = _this.styles[id];
-        });
-      }, 0);
-      this.oldStyles = this.styles;
-      console.log('Render took', Math.round(performance.now() - t0), 'ms');
+    this.postRenderJobs = [];
+    this.styleMemory = {};
+    this.actions = stateConfig.actions;
+    Object.keys(stateConfig.state).forEach(function (variable) {
+      _this.state[variable] = stateConfig.state[variable];
+    });
+    this.render(this.root, this.id);
+  },
+  // STATE #######################################################################
+  state: new Proxy({}, {
+    set: function set(target, key, value) {
+      target[key] = value;
+      console.log(key, '=', value);
+      updateSubscribers(key);
+      return true;
     }
-    /***************************************************************************************
-     * Returns a node from a component.
-     * 
-     * A component has the following structure:
-     * { text: string } OR
-     * {
-     *  tag: string,
-     *  name: string,
-     *  attrs?: {
-     *      attribute: value,
-     *      ...
-     *  },
-     *  events?: {
-     *      eventName: handler,
-     *      ...
-     *  },
-     *  child?: Component,
-     *  children?: [Component, ...],
-     *  style: `string`
-     * }
-     **************************************************************************************/
+  }),
+  dispatch: function dispatch(action, arg) {
+    this.actions(this.state)[action](arg);
+  },
+  subscribe: function subscribe(name, variable) {
+    if (!this.subscriptions[variable]) this.subscriptions[variable] = [];
+    if (this.subscriptions[variable].includes(name)) return;
+    this.subscriptions[variable].push(name);
+  },
+  subscriptions: {},
+  // RENDERING #####################################################################
+  // renders html element nodes using "component" into the DOM at id="id"
+  render: function render(component, id) {
+    var t0 = performance.now();
+    if (!id) id = component.id;
+    this.validateComponent(component);
+    var render = this.renderElement(component, id);
+    var el = document.getElementById(id);
+    el && el.parentNode.replaceChild(render, el);
+    this.postRender();
+    console.log('Render took', Math.round(performance.now() - t0), 'ms id:', id);
+  },
+  // execture post-render jobs
+  postRender: function postRender() {
+    var _this2 = this;
 
-  }, {
-    key: "renderComponent",
-    value: function renderComponent(component) {
-      var _this2 = this;
-
-      this.validateComponent(component);
-      if (component.text !== undefined) return document.createTextNode(component.text);
-      var el = document.createElement(component.tag);
-      var id = "".concat(component.name, "-").concat(this.componentId);
-      el.setAttribute('id', id);
-      this.componentId++; // add all the attrs using element.setAttribute()
-
-      if (component.attrs !== undefined) {
-        Object.keys(component.attrs).forEach(function (attrName) {
-          var attrValue = component.attrs[attrName];
-          el.setAttribute(attrName, attrValue);
-        });
-      } // add all the event listeners using element.addEventListener()
-
-
-      if (component.events !== undefined) {
-        Object.keys(component.events).forEach(function (event) {
-          var handler = component.events[event];
-          el.addEventListener(event, handler);
-        });
-      } // add a single child component
-
-
-      if (component.child !== undefined) {
-        el.appendChild(this.renderComponent(component.child));
-      } // add an array of children components
-
-
-      if (component.children !== undefined) {
-        component.children.forEach(function (child) {
-          el.appendChild(_this2.renderComponent(child));
-        });
-      } // only set this.styles don't actually set the attribute, since it needs to be set after render for transitions to work
-
-
-      if (component.style !== undefined) {
-        el.setAttribute('style', this.oldStyles[id]);
-        this.styles[id] = component.style;
+    setTimeout(function () {
+      while (_this2.postRenderJobs.length !== 0) {
+        _this2.postRenderJobs.pop()();
       }
+    }, 0);
+  },
+  // re-renders all components with that name
+  renderByName: function renderByName(name) {
+    this.renderComponentByName(this.root, name);
+  },
+  // re-renders all components with that name starting at this component
+  renderComponentByName: function renderComponentByName(component, name) {
+    var _this3 = this;
 
-      return el;
+    if (component.name === name) {
+      this.render(component);
+      return;
     }
-  }, {
-    key: "validateComponent",
-    value: function validateComponent(component) {
-      var acceptedFields = ['text', 'name', 'tag', 'attrs', 'events', 'child', 'children', 'style'];
-      Object.keys(component).forEach(function (key) {
-        if (!acceptedFields.includes(key)) {
-          throw "Field \"".concat(key, "\" is not an accepted component field, use one of ").concat(JSON.stringify(acceptedFields));
+
+    if (component.child) {
+      this.renderComponentByName(component.child.bind(component)(), name);
+    }
+
+    if (component.children) {
+      component.children.bind(component)().forEach(function (child) {
+        _this3.renderComponentByName(child, name);
+      });
+    }
+  },
+  // returns an element node from a json component
+  renderElement: function renderElement(component, id) {
+    var _this4 = this;
+
+    if (id) {
+      component.id = id;
+    } // simple text component
+
+
+    if (component.text !== undefined) return document.createTextNode(component.text); // other types
+
+    var el = document.createElement(component.tag);
+    el.setAttribute('id', component.id); // add all the attrs using element.setAttribute()
+
+    if (component.attrs !== undefined) {
+      Object.keys(component.attrs).forEach(function (attrName) {
+        var attrValue = component.attrs[attrName];
+        el.setAttribute(attrName, attrValue);
+      });
+    } // add all the event listeners using element.addEventListener()
+
+
+    if (component.events !== undefined) {
+      Object.keys(component.events).forEach(function (event) {
+        var handler = component.events[event];
+        el.addEventListener(event, function (e) {
+          var flag = handler.bind(component)(e);
+
+          if (flag !== _this4.flags.NO_SELF_RENDER) {
+            _this4.render(component);
+          }
+
+          e.stopPropagation();
+        });
+      });
+    } // add a single child component
+
+
+    if (component.child !== undefined) {
+      el.appendChild(this.renderElement(component.child.bind(component)(), "".concat(id, "-0")));
+    } // add an array of children components
+
+
+    if (component.children !== undefined) {
+      component.children.bind(component)().forEach(function (child, index) {
+        el.appendChild(_this4.renderElement(child, "".concat(id, "-").concat(index)));
+      });
+    } // only set this.styles don't actually set the attribute, since it needs to be set after render for transitions to work
+
+
+    if (component.style !== undefined) {
+      el.setAttribute('style', this.styleMemory[component.id]);
+      this.postRenderJobs.push(function () {
+        var newStyle = component.style.bind(component)();
+        var el = document.getElementById(component.id);
+        if (el) el.style = newStyle;
+        _this4.styleMemory[component.id] = newStyle;
+      });
+    }
+
+    if (component.subscribeTo !== undefined) {
+      component.subscribeTo.forEach(function (variable) {
+        _this4.subscribe(component.name, variable);
+      });
+    }
+
+    return el;
+  },
+  // VALIDATION ##############################################################
+  validateComponent: function validateComponent(component) {
+    var acceptedFields = ['text', 'name', 'tag', 'data', 'attrs', 'events', 'child', 'children', 'style', 'id', 'subscribeTo'];
+    Object.keys(component).forEach(function (key) {
+      if (!acceptedFields.includes(key)) {
+        throw "Field \"".concat(key, "\" is not an accepted component field, use one of ").concat(JSON.stringify(acceptedFields));
+      }
+    });
+
+    if (component.text !== undefined && Object.keys(component).length !== 1) {
+      throw 'Simple text components must only contain a "text" field ' + JSON.stringify(component);
+    }
+
+    if (component.text === undefined) {
+      if (!component.tag) throw 'Component must have a "tag" ' + JSON.stringify(component);
+      if (!component.name) throw 'Component must have a "name" ' + JSON.stringify(component);
+    } // type checking
+
+
+    if (component.text !== undefined && typeof component.text !== 'string') {
+      throw 'Field "text" must be of type string ' + JSON.stringify(component);
+    }
+
+    if (component.name !== undefined && typeof component.name !== 'string') {
+      throw 'Field "name" must be of type string ' + JSON.stringify(component);
+    }
+
+    if (component.tag !== undefined && typeof component.tag !== 'string') {
+      throw 'Field "tag" must be of type string ' + JSON.stringify(component);
+    }
+
+    if (component.style !== undefined && typeof component.style !== 'function') {
+      throw 'Field "style" must be of type function ' + JSON.stringify(component);
+    }
+
+    if (component.attrs !== undefined && _typeof(component.attrs) !== 'object') {
+      throw 'Field "attrs" must be of type object ' + JSON.stringify(component);
+    }
+
+    if (component.attrs !== undefined) {
+      Object.keys(component.attrs).forEach(function (key) {
+        if (typeof component.attrs[key] !== 'string') {
+          throw 'All "attrs" must be of type string ' + JSON.stringify(component);
         }
       });
-
-      if (component.text !== undefined && Object.keys(component).length !== 1) {
-        throw 'Simple text components must only contain a "text" field ' + JSON.stringify(component);
-      }
-
-      if (component.text === undefined) {
-        if (!component.tag) throw 'Component must have a "tag" ' + JSON.stringify(component);
-        if (!component.name) throw 'Component must have a "name" ' + JSON.stringify(component);
-      }
-
-      if (component.text !== undefined && typeof component.text !== 'string') {
-        throw 'Field "text" must be of type string ' + JSON.stringify(component);
-      }
-
-      if (component.name !== undefined && typeof component.name !== 'string') {
-        throw 'Field "name" must be of type string ' + JSON.stringify(component);
-      }
-
-      if (component.tag !== undefined && typeof component.tag !== 'string') {
-        throw 'Field "tag" must be of type string ' + JSON.stringify(component);
-      }
-
-      if (component.style !== undefined && typeof component.style !== 'string') {
-        throw 'Field "style" must be of type string ' + JSON.stringify(component);
-      }
-
-      if (component.attrs !== undefined && _typeof(component.attrs) !== 'object') {
-        throw 'Field "attrs" must be of type object ' + JSON.stringify(component);
-      }
-
-      if (component.attrs !== undefined) {
-        Object.keys(component.attrs).forEach(function (key) {
-          if (typeof component.attrs[key] !== 'string') {
-            throw 'All "attrs" must be of type string ' + JSON.stringify(component);
-          }
-        });
-      }
-
-      if (component.events !== undefined && _typeof(component.events) !== 'object') {
-        throw 'Field "events" must be of type object ' + JSON.stringify(component);
-      }
-
-      if (component.events !== undefined) {
-        Object.keys(component.events).forEach(function (key) {
-          if (typeof component.events[key] !== 'function') {
-            throw 'All "events" must be of type function ' + JSON.stringify(component);
-          }
-        });
-      }
-
-      if (component.child !== undefined && _typeof(component.child) !== 'object') {
-        throw 'Field "child" must be of type object ' + JSON.stringify(component);
-      }
-
-      if (component.children !== undefined && !Array.isArray(component.children)) {
-        throw 'Field "children" must be an array ' + JSON.stringify(component);
-      }
     }
-  }]);
 
-  return Framework;
-}();
+    if (component.events !== undefined && _typeof(component.events) !== 'object') {
+      throw 'Field "events" must be of type object ' + JSON.stringify(component);
+    }
 
-exports.default = Framework;
-},{}],"State.js":[function(require,module,exports) {
+    if (component.events !== undefined) {
+      Object.keys(component.events).forEach(function (key) {
+        if (typeof component.events[key] !== 'function') {
+          throw 'All "events" must be of type function ' + JSON.stringify(component);
+        }
+      });
+    } // if (component.child !== undefined && typeof(component.child) !== 'object') {
+    //     throw 'Field "child" must be of type object ' + JSON.stringify(component)
+    // }
+    // if (component.children !== undefined && !Array.isArray(component.children)) {
+    //     throw 'Field "children" must be an array ' + JSON.stringify(component)
+    // }
+
+  },
+  flags: Object.freeze({
+    NO_SELF_RENDER: 1
+  })
+};
+
+var updateSubscribers = function updateSubscribers(variable) {
+  var subscribed = Framework.subscriptions[variable];
+  subscribed && subscribed.forEach(function (name) {
+    Framework.renderByName(name);
+  });
+};
+
+var _default = Framework;
+exports.default = _default;
+},{}],"components/Button.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
-// state.js is a singleton object, so it can be imported everywhere and share the same state
-var _default = {
-  init: function init(framework) {
-    this.framework = framework;
-    this.boxDim = [100, 40];
-    this.page = 'start';
-  },
 
-  // methods for modifying the state
-  get actions() {
-    var _this = this;
+var _Framework = _interopRequireDefault(require("../Framework"));
 
-    return {
-      setBoxDim: function setBoxDim(dim) {
-        return _this.boxDim = dim;
-      },
-      setPage: function setPage(page) {
-        return _this.page = page;
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = function _default(number) {
+  var className = '';
+  if (number === 1) className = 'a4';
+  if (number === 2) className = 'a5';
+  if (number === 3) className = 'a6';
+  return {
+    name: 'button',
+    tag: 'div',
+    attrs: {
+      class: "".concat(className, " grid3x3")
+    },
+    data: {
+      myCount: 0
+    },
+    style: function style() {
+      return "\n                width: 70px;\n                height: 70px;\n                border: solid 1px grey;\n                cursor: pointer;\n            ";
+    },
+    events: {
+      click: function click(e) {
+        this.data.myCount += 1;
+
+        _Framework.default.dispatch('incrementCount', number);
       }
-    };
-  },
+    },
+    child: function child() {
+      var _this = this;
 
-  dispatch: function dispatch(action, arg) {
-    console.log('dipatched', action, arg);
-    this.actions[action](arg);
-    this.framework.render();
+      return {
+        tag: 'div',
+        child: function child() {
+          return {
+            text: "+".concat(number, " (").concat(_this.data.myCount, ")")
+          };
+        }
+      };
+    }
+  };
+};
+
+exports.default = _default;
+},{"../Framework":"Framework.js"}],"components/Counter.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = _interopRequireDefault(require("../Framework"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = {
+  name: 'counter',
+  tag: 'div',
+  attrs: {
+    class: 'a2'
+  },
+  subscribeTo: ['count'],
+  child: function child() {
+    return {
+      text: "Count: ".concat(_Framework.default.state.count)
+    };
   }
 };
+exports.default = _default;
+},{"../Framework":"Framework.js"}],"components/ExitButton.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _default = function _default(handler) {
+  return {
+    name: 'exit',
+    tag: 'div',
+    attrs: {
+      class: 'a8 grid3x3'
+    },
+    style: function style() {
+      return "\n            width: 100px;\n            height: 50px;\n            border: 1px solid grey;\n            cursor: pointer;\n        ";
+    },
+    events: {
+      click: handler
+    },
+    child: function child() {
+      return {
+        name: '',
+        tag: 'div',
+        child: function child() {
+          return {
+            text: 'exit'
+          };
+        }
+      };
+    }
+  };
+};
+
 exports.default = _default;
 },{}],"components/Box.js":[function(require,module,exports) {
 "use strict";
@@ -351,25 +473,84 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _State = _interopRequireDefault(require("../State"));
+var _Button = _interopRequireDefault(require("./Button"));
+
+var _Counter = _interopRequireDefault(require("./Counter"));
+
+var _Framework = _interopRequireDefault(require("../Framework"));
+
+var _ExitButton = _interopRequireDefault(require("./ExitButton"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = function _default() {
-  return {
-    name: 'box',
-    tag: 'div',
-    events: {
-      click: function click() {
-        return _State.default.dispatch('setBoxDim', [500, 300]);
-      }
-    },
-    style: "\n            width: ".concat(_State.default.boxDim[0], "px;\n            height: ").concat(_State.default.boxDim[1], "px;\n            max-width: 100vw;\n            border: 1px solid grey;\n            transition: 0.5s;\n        ")
-  };
+var states = Object.freeze({
+  START: 1,
+  EXPANDING: 2,
+  EXPANDED: 3
+});
+var dimensions = {
+  START: [100, 50],
+  EXPANDED: [500, 300]
 };
+var animationTime = 0.5;
+var _default = {
+  name: 'box',
+  tag: 'div',
+  attrs: {
+    class: 'grid3x3'
+  },
+  data: {
+    dimensions: dimensions.START,
+    state: states.START
+  },
+  events: {
+    click: function click(e) {
+      var _this = this;
 
+      if (this.data.state === states.EXPANDED) return;
+      this.data.dimensions = dimensions.EXPANDED;
+      this.data.state = states.EXPANDING;
+
+      _Framework.default.dispatch('setBoxExpanding', true);
+
+      setTimeout(function () {
+        _this.data.state = states.EXPANDED;
+
+        _Framework.default.dispatch('setBoxExpanding', false);
+      }, animationTime * 1000);
+    }
+  },
+  subscribeTo: ['boxExpanding'],
+  style: function style() {
+    return "\n            width: ".concat(this.data.dimensions[0], "px;\n            height: ").concat(this.data.dimensions[1], "px;\n            max-width: 100vw;\n            border: 1px solid grey;\n            transition: ").concat(animationTime, "s;\n            cursor: ").concat(this.data.state === states.START ? 'pointer' : 'initial', ";\n        ");
+  },
+  children: function children() {
+    var _this2 = this;
+
+    var start = [{
+      tag: 'div',
+      child: function child() {
+        return {
+          text: 'start'
+        };
+      }
+    }];
+
+    var exit = function exit() {
+      _this2.data.dimensions = dimensions.START;
+      _this2.data.state = states.START;
+
+      _Framework.default.renderByName('box');
+    };
+
+    var buttons = [_Counter.default, (0, _Button.default)(1), (0, _Button.default)(2), (0, _Button.default)(3), (0, _ExitButton.default)(exit)];
+    if (this.data.state === states.START) return start;
+    if (this.data.state === states.EXPANDING) return start;
+    if (this.data.state === states.EXPANDED) return buttons;
+  }
+};
 exports.default = _default;
-},{"../State":"State.js"}],"components/App.js":[function(require,module,exports) {
+},{"./Button":"components/Button.js","./Counter":"components/Counter.js","../Framework":"Framework.js","./ExitButton":"components/ExitButton.js"}],"components/App.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -381,33 +562,58 @@ var _Box = _interopRequireDefault(require("./Box"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = function _default() {
-  return {
-    name: 'app',
-    tag: 'div',
-    attrs: {
-      class: 'grid3x3'
-    },
-    style: "\n            width: 100vw;\n            height: 100vh;\n            overflow: hidden;\n        ",
-    child: (0, _Box.default)()
-  };
+var _default = {
+  name: 'app',
+  tag: 'div',
+  attrs: {
+    class: 'grid3x3'
+  },
+  style: function style() {
+    return "\n        width: 100vw;\n        height: 100vh;\n        overflow: hidden;\n        font-family: 'Lexend Deca', sans-serif;\n    ";
+  },
+  children: function children() {
+    return [_Box.default];
+  }
 };
-
 exports.default = _default;
-},{"./Box":"components/Box.js"}],"index.js":[function(require,module,exports) {
+},{"./Box":"components/Box.js"}],"StateConfig.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+var _default = {
+  state: {
+    count: 0,
+    boxExpanding: false
+  },
+  actions: function actions(state) {
+    return {
+      incrementCount: function incrementCount(amount) {
+        return state.count += amount;
+      },
+      setBoxExpanding: function setBoxExpanding(bool) {
+        return state.boxExpanding = bool;
+      }
+    };
+  }
+};
+exports.default = _default;
+},{}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _Framework = _interopRequireDefault(require("./Framework"));
 
-var _State = _interopRequireDefault(require("./State"));
-
 var _App = _interopRequireDefault(require("./components/App"));
+
+var _StateConfig = _interopRequireDefault(require("./StateConfig"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // render into the div with id='app'
-new _Framework.default('app', _State.default, _App.default).render();
-},{"./Framework":"Framework.js","./State":"State.js","./components/App":"components/App.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+_Framework.default.init(_App.default, 'app', _StateConfig.default);
+},{"./Framework":"Framework.js","./components/App":"components/App.js","./StateConfig":"StateConfig.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -435,7 +641,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56565" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49825" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

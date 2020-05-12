@@ -1,65 +1,97 @@
-export default class Framework {
-    constructor(id, state, rootComponent) {
-        state.init(this)
+const Framework = {
+    init(root, id, stateConfig) {
+        this.root = root
         this.id = id
-        this.rootComponent = rootComponent
-        this.componentId = 0;
-        this.oldStyles = {}
-        this.styles = {}
-    }
+        this.postRenderJobs = []
+        this.styleMemory = {}
+        this.actions = stateConfig.actions
+        Object.keys(stateConfig.state).forEach(variable => {
+            this.state[variable] = stateConfig.state[variable]
+        })
+        this.render(this.root, this.id)
+    },
 
-    // renders nodes into this.id
-    render() {
+    // STATE #######################################################################
+
+    state: new Proxy({}, {
+        set: (target, key, value) => {
+            target[key] = value;
+            console.log(key, '=', value)
+            updateSubscribers(key)
+            return true;
+        }
+    }),
+
+    dispatch(action, arg) {
+        this.actions(this.state)[action](arg)
+    },
+
+    subscribe(name, variable) {
+        if (!this.subscriptions[variable]) this.subscriptions[variable] = []
+        if (this.subscriptions[variable].includes(name)) return
+        this.subscriptions[variable].push(name)
+    },
+
+    subscriptions: {},
+
+    // RENDERING #####################################################################
+
+    // renders html element nodes using "component" into the DOM at id="id"
+    render(component, id) {
         const t0 = performance.now()
-
-        // delete element content and add the new render
-        this.componentId = 0;
-        const el = document.getElementById(this.id)
-        el.textContent = ''
-        el.appendChild(this.renderComponent(this.rootComponent()))
-
-        setTimeout(() => {
-            Object.keys(this.styles).forEach(id => {
-                document.getElementById(id).style = this.styles[id]
-            })
-        }, 0);
-
-        this.oldStyles = this.styles
-
-        console.log('Render took', Math.round(performance.now() - t0), 'ms')
-    }
-
-    /***************************************************************************************
-     * Returns a node from a component.
-     * 
-     * A component has the following structure:
-     * { text: string } OR
-     * {
-     *  tag: string,
-     *  name: string,
-     *  attrs?: {
-     *      attribute: value,
-     *      ...
-     *  },
-     *  events?: {
-     *      eventName: handler,
-     *      ...
-     *  },
-     *  child?: Component,
-     *  children?: [Component, ...],
-     *  style: `string`
-     * }
-     **************************************************************************************/
-    renderComponent(component) {
+        
+        if (!id) id = component.id
         this.validateComponent(component)
 
+        const render = this.renderElement(component, id)
+        const el = document.getElementById(id)
+        el && el.parentNode.replaceChild(render, el)
+
+        this.postRender()
+
+        console.log('Render took', Math.round(performance.now() - t0), 'ms id:', id)
+    },
+
+    // execture post-render jobs
+    postRender() {
+        setTimeout(() => {
+            while (this.postRenderJobs.length !== 0) this.postRenderJobs.pop()()
+        }, 0);
+    },
+
+    // re-renders all components with that name
+    renderByName(name) {
+        this.renderComponentByName(this.root, name)
+    },
+
+    // re-renders all components with that name starting at this component
+    renderComponentByName(component, name) {
+        if (component.name === name) {
+            this.render(component)
+            return
+        }
+        if (component.child) {
+            this.renderComponentByName(component.child.bind(component)(), name)
+        }
+        if (component.children) {
+            component.children.bind(component)().forEach(child => {
+                this.renderComponentByName(child, name)
+            })
+        }
+    },
+
+    // returns an element node from a json component
+    renderElement(component, id) {
+        if (id) {
+            component.id = id
+        }
+
+        // simple text component
         if (component.text !== undefined) return document.createTextNode(component.text)
 
+        // other types
         const el = document.createElement(component.tag)
-
-        const id = `${component.name}-${this.componentId}`
-        el.setAttribute('id', id)
-        this.componentId++
+        el.setAttribute('id', component.id)
         
         // add all the attrs using element.setAttribute()
         if (component.attrs !== undefined) {
@@ -73,33 +105,52 @@ export default class Framework {
         if (component.events !== undefined) {
             Object.keys(component.events).forEach(event => {
                 const handler = component.events[event]
-                el.addEventListener(event, handler)
+                el.addEventListener(event, (e) => {
+                    const flag = handler.bind(component)(e)
+                    if (flag !== this.flags.NO_SELF_RENDER) {
+                        this.render(component)
+                    }
+                    e.stopPropagation()
+                })
             })
         }
         
         // add a single child component
         if (component.child !== undefined) {
-            el.appendChild(this.renderComponent(component.child))
+            el.appendChild(this.renderElement(component.child.bind(component)(), `${id}-0`))
         }
         
         // add an array of children components
         if (component.children !== undefined) {
-            component.children.forEach(child => {
-                el.appendChild(this.renderComponent(child))
+            component.children.bind(component)().forEach((child, index) => {
+                el.appendChild(this.renderElement(child, `${id}-${index}`))
             })
         }
 
         // only set this.styles don't actually set the attribute, since it needs to be set after render for transitions to work
         if (component.style !== undefined) {
-            el.setAttribute('style', this.oldStyles[id])
-            this.styles[id] = component.style
+            el.setAttribute('style', this.styleMemory[component.id])
+            this.postRenderJobs.push(() => {
+                const newStyle = component.style.bind(component)()
+                const el = document.getElementById(component.id)
+                if (el) el.style = newStyle
+                this.styleMemory[component.id] = newStyle
+            })
+        }
+
+        if (component.subscribeTo !== undefined) {
+            component.subscribeTo.forEach(variable => {
+                this.subscribe(component.name, variable)
+            })
         }
         
         return el
-    }
+    },
+
+    // VALIDATION ##############################################################
 
     validateComponent(component) {
-        const acceptedFields = ['text', 'name', 'tag', 'attrs', 'events', 'child', 'children', 'style']
+        const acceptedFields = ['text', 'name', 'tag', 'data', 'attrs', 'events', 'child', 'children', 'style', 'id', 'subscribeTo']
         Object.keys(component).forEach(key => {
             if (!acceptedFields.includes(key)) {
                 throw `Field "${key}" is not an accepted component field, use one of ${JSON.stringify(acceptedFields)}`
@@ -113,18 +164,19 @@ export default class Framework {
             if (!component.tag) throw 'Component must have a "tag" ' + JSON.stringify(component) 
             if (!component.name) throw 'Component must have a "name" ' + JSON.stringify(component)
         }
+
+        // type checking
         if (component.text !== undefined && typeof(component.text) !== 'string') {
             throw 'Field "text" must be of type string ' + JSON.stringify(component)
         }
-
         if (component.name !== undefined && typeof(component.name) !== 'string') {
             throw 'Field "name" must be of type string ' + JSON.stringify(component)
         }
         if (component.tag !== undefined && typeof(component.tag) !== 'string') {
             throw 'Field "tag" must be of type string ' + JSON.stringify(component)
         }
-        if (component.style !== undefined && typeof(component.style) !== 'string') {
-            throw 'Field "style" must be of type string ' + JSON.stringify(component)
+        if (component.style !== undefined && typeof(component.style) !== 'function') {
+            throw 'Field "style" must be of type function ' + JSON.stringify(component)
         }
 
         if (component.attrs !== undefined && typeof(component.attrs) !== 'object') {
@@ -149,11 +201,24 @@ export default class Framework {
             })
         }
 
-        if (component.child !== undefined && typeof(component.child) !== 'object') {
-            throw 'Field "child" must be of type object ' + JSON.stringify(component)
-        }
-        if (component.children !== undefined && !Array.isArray(component.children)) {
-            throw 'Field "children" must be an array ' + JSON.stringify(component)
-        }
-    }
+        // if (component.child !== undefined && typeof(component.child) !== 'object') {
+        //     throw 'Field "child" must be of type object ' + JSON.stringify(component)
+        // }
+        // if (component.children !== undefined && !Array.isArray(component.children)) {
+        //     throw 'Field "children" must be an array ' + JSON.stringify(component)
+        // }
+    },
+
+    flags: Object.freeze({
+        NO_SELF_RENDER: 1
+    }),
 }
+
+const updateSubscribers = (variable) => {
+    const subscribed = Framework.subscriptions[variable]
+    subscribed && subscribed.forEach(name => {
+        Framework.renderByName(name)
+    })
+}
+
+export default Framework
