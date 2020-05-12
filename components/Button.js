@@ -22,7 +22,7 @@ export default number => {
             `
         },
         events: {
-            click(e) {
+            click() {
                 this.data.myCount += 1
                 Framework.dispatch('incrementCount', number)
             }

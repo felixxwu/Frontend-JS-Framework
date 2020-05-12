@@ -381,7 +381,7 @@ var _default = function _default(number) {
       return "\n                width: 70px;\n                height: 70px;\n                border: solid 1px grey;\n                cursor: pointer;\n            ";
     },
     events: {
-      click: function click(e) {
+      click: function click() {
         this.data.myCount += 1;
 
         _Framework.default.dispatch('incrementCount', number);
@@ -504,10 +504,10 @@ var _default = {
     state: states.START
   },
   events: {
-    click: function click(e) {
+    click: function click() {
       var _this = this;
 
-      if (this.data.state === states.EXPANDED) return;
+      if (this.data.state === states.EXPANDED) return _Framework.default.flags.NO_SELF_RENDER;
       this.data.dimensions = dimensions.EXPANDED;
       this.data.state = states.EXPANDING;
 
@@ -538,14 +538,22 @@ var _default = {
 
     var exit = function exit() {
       _this2.data.dimensions = dimensions.START;
-      _this2.data.state = states.START;
+      _this2.data.state = states.EXPANDING;
 
-      _Framework.default.renderByName('box');
+      _Framework.default.dispatch('resetCount');
+
+      _Framework.default.dispatch('setBoxExpanding', true);
+
+      setTimeout(function () {
+        _this2.data.state = states.START;
+
+        _Framework.default.dispatch('setBoxExpanding', false);
+      }, animationTime * 1000);
     };
 
     var buttons = [_Counter.default, (0, _Button.default)(1), (0, _Button.default)(2), (0, _Button.default)(3), (0, _ExitButton.default)(exit)];
     if (this.data.state === states.START) return start;
-    if (this.data.state === states.EXPANDING) return start;
+    if (this.data.state === states.EXPANDING) return [];
     if (this.data.state === states.EXPANDED) return buttons;
   }
 };
@@ -592,6 +600,9 @@ var _default = {
     return {
       incrementCount: function incrementCount(amount) {
         return state.count += amount;
+      },
+      resetCount: function resetCount() {
+        return state.count = 0;
       },
       setBoxExpanding: function setBoxExpanding(bool) {
         return state.boxExpanding = bool;

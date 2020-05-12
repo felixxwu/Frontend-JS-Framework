@@ -16,12 +16,13 @@ export default {
         state: states.START,
     },
     events: {
-        click(e) { 
-            if (this.data.state === states.EXPANDED) return
+        click() { 
+            if (this.data.state === states.EXPANDED) return Framework.flags.NO_SELF_RENDER
+
             this.data.dimensions = dimensions.EXPANDED
             this.data.state = states.EXPANDING
+            
             Framework.dispatch('setBoxExpanding', true)
-
             setTimeout(() => {
                 this.data.state = states.EXPANDED
                 Framework.dispatch('setBoxExpanding', false)
@@ -46,13 +47,19 @@ export default {
         }]
         const exit = () => {
             this.data.dimensions = dimensions.START
-            this.data.state = states.START
-            Framework.renderByName('box')
+            this.data.state = states.EXPANDING
+            
+            Framework.dispatch('resetCount')
+            Framework.dispatch('setBoxExpanding', true)
+            setTimeout(() => {
+                this.data.state = states.START
+                Framework.dispatch('setBoxExpanding', false)
+            }, animationTime * 1000);
         }
         const buttons = [Counter, Button(1), Button(2), Button(3), ExitButton(exit)]
         
         if (this.data.state === states.START) return start
-        if (this.data.state === states.EXPANDING) return start
+        if (this.data.state === states.EXPANDING) return []
         if (this.data.state === states.EXPANDED) return buttons
     }
 }
