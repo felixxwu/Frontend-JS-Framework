@@ -1,0 +1,30 @@
+/*
+A very basic use for cssgrid to quickly and easily center an element vertically and horizontally.
+This requires a parent div with class grid3x3, which will be what the elements will be centered in.
+Then you can specify where to center your elements. There are areas 1-9, with the default being 5.
+Each centered child needs either a tag a1-9 or a class a1-9 to specify location if not the defalt.
+*/
+
+.grid3x3 {
+    display: grid;
+    grid-template-areas: 
+        "a1 a2 a3"
+        "a4 a5 a6"
+        "a7 a8 a9";
+        grid-template-columns: 1fr auto 1fr;
+}
+
+.grid3x3 > * {
+    grid-area: a5;
+    place-self: center;
+}
+
+.grid3x3 > a1, .grid3x3 > .a1 {grid-area: a1;}
+.grid3x3 > a2, .grid3x3 > .a2 {grid-area: a2;}
+.grid3x3 > a3, .grid3x3 > .a3 {grid-area: a3;}
+.grid3x3 > a4, .grid3x3 > .a4 {grid-area: a4;}
+.grid3x3 > a5, .grid3x3 > .a5 {grid-area: a5;}
+.grid3x3 > a6, .grid3x3 > .a6 {grid-area: a6;}
+.grid3x3 > a7, .grid3x3 > .a7 {grid-area: a7;}
+.grid3x3 > a8, .grid3x3 > .a8 {grid-area: a8;}
+.grid3x3 > a9, .grid3x3 > .a9 {grid-area: a9;}

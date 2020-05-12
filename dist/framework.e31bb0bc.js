@@ -117,64 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"components/State.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-// state.js is a singleton object, so it can be imported everywhere and share the same state
-var _default = {
-  init: function init(framework) {
-    this.framework = framework;
-    this.selected = null;
-    this.appOpacity = 1;
-    this.page = '1';
-  },
-
-  // methods for modifying the state
-  get actions() {
-    var _this = this;
-
-    return {
-      select: function select(number) {
-        if (number === _this.selected) {
-          _this.selected = null;
-        } else {
-          _this.selected = number;
-        }
-      },
-      setOpaque: function setOpaque() {
-        return _this.appOpacity = 1;
-      },
-      setTransparent: function setTransparent() {
-        return _this.appOpacity = 0;
-      },
-      switch: function _switch() {
-        return _this.page = _this.page === '1' ? '2' : '1';
-      }
-    };
-  },
-
-  // computed css variables, which are injected into the DOM for css files to use
-  get cssVars() {
-    return {
-      bg: this.selected === 0 && 'red' || this.selected === 1 && 'green' || this.selected === 2 && 'blue' || 'white',
-      width: "".concat(500 + this.selected * 100, "px"),
-      opacity: this.appOpacity,
-      transitionSpeed: '0.5s',
-      transitionSpeedMS: 500
-    };
-  },
-
-  dispatch: function dispatch(action, arg) {
-    this.actions[action](arg);
-    this.framework.render();
-  }
-};
-exports.default = _default;
-},{}],"Framework.js":[function(require,module,exports) {
+})({"Framework.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -182,9 +125,7 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _State = _interopRequireDefault(require("./components/State"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+function _typeof(obj) { "@babel/helpers - typeof"; if (typeof Symbol === "function" && typeof Symbol.iterator === "symbol") { _typeof = function _typeof(obj) { return typeof obj; }; } else { _typeof = function _typeof(obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; }; } return _typeof(obj); }
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
@@ -193,30 +134,35 @@ function _defineProperties(target, props) { for (var i = 0; i < props.length; i+
 function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
 var Framework = /*#__PURE__*/function () {
-  function Framework(id, rootComponent) {
+  function Framework(id, state, rootComponent) {
     _classCallCheck(this, Framework);
 
+    state.init(this);
     this.id = id;
-
-    _State.default.init(this);
-
     this.rootComponent = rootComponent;
+    this.componentId = 0;
+    this.oldStyles = {};
+    this.styles = {};
   } // renders nodes into this.id
 
 
   _createClass(Framework, [{
     key: "render",
     value: function render() {
+      var _this = this;
+
       var t0 = performance.now(); // delete element content and add the new render
 
+      this.componentId = 0;
       var el = document.getElementById(this.id);
       el.textContent = '';
-      el.appendChild(this.renderComponent(this.rootComponent())); // update the css variables
-
-      var style = Object.keys(_State.default.cssVars).map(function (name) {
-        return "--".concat(name, ": ").concat(_State.default.cssVars[name]);
-      }).join('; ');
-      el.setAttribute('style', style);
+      el.appendChild(this.renderComponent(this.rootComponent()));
+      setTimeout(function () {
+        Object.keys(_this.styles).forEach(function (id) {
+          document.getElementById(id).style = _this.styles[id];
+        });
+      }, 0);
+      this.oldStyles = this.styles;
       console.log('Render took', Math.round(performance.now() - t0), 'ms');
     }
     /***************************************************************************************
@@ -226,6 +172,7 @@ var Framework = /*#__PURE__*/function () {
      * { text: string } OR
      * {
      *  tag: string,
+     *  name: string,
      *  attrs?: {
      *      attribute: value,
      *      ...
@@ -235,18 +182,22 @@ var Framework = /*#__PURE__*/function () {
      *      ...
      *  },
      *  child?: Component,
-     *  children?: [Component, ...]
+     *  children?: [Component, ...],
+     *  style: `string`
      * }
      **************************************************************************************/
 
   }, {
     key: "renderComponent",
     value: function renderComponent(component) {
-      var _this = this;
+      var _this2 = this;
 
+      this.validateComponent(component);
       if (component.text !== undefined) return document.createTextNode(component.text);
-      if (component.tag === undefined) throw 'must specify a tag for non-text components';
-      var el = document.createElement(component.tag); // add all the attrs using element.setAttribute()
+      var el = document.createElement(component.tag);
+      var id = "".concat(component.name, "-").concat(this.componentId);
+      el.setAttribute('id', id);
+      this.componentId++; // add all the attrs using element.setAttribute()
 
       if (component.attrs !== undefined) {
         Object.keys(component.attrs).forEach(function (attrName) {
@@ -271,11 +222,84 @@ var Framework = /*#__PURE__*/function () {
 
       if (component.children !== undefined) {
         component.children.forEach(function (child) {
-          el.appendChild(_this.renderComponent(child));
+          el.appendChild(_this2.renderComponent(child));
         });
+      } // only set this.styles don't actually set the attribute, since it needs to be set after render for transitions to work
+
+
+      if (component.style !== undefined) {
+        el.setAttribute('style', this.oldStyles[id]);
+        this.styles[id] = component.style;
       }
 
       return el;
+    }
+  }, {
+    key: "validateComponent",
+    value: function validateComponent(component) {
+      var acceptedFields = ['text', 'name', 'tag', 'attrs', 'events', 'child', 'children', 'style'];
+      Object.keys(component).forEach(function (key) {
+        if (!acceptedFields.includes(key)) {
+          throw "Field \"".concat(key, "\" is not an accepted component field, use one of ").concat(JSON.stringify(acceptedFields));
+        }
+      });
+
+      if (component.text !== undefined && Object.keys(component).length !== 1) {
+        throw 'Simple text components must only contain a "text" field ' + JSON.stringify(component);
+      }
+
+      if (component.text === undefined) {
+        if (!component.tag) throw 'Component must have a "tag" ' + JSON.stringify(component);
+        if (!component.name) throw 'Component must have a "name" ' + JSON.stringify(component);
+      }
+
+      if (component.text !== undefined && typeof component.text !== 'string') {
+        throw 'Field "text" must be of type string ' + JSON.stringify(component);
+      }
+
+      if (component.name !== undefined && typeof component.name !== 'string') {
+        throw 'Field "name" must be of type string ' + JSON.stringify(component);
+      }
+
+      if (component.tag !== undefined && typeof component.tag !== 'string') {
+        throw 'Field "tag" must be of type string ' + JSON.stringify(component);
+      }
+
+      if (component.style !== undefined && typeof component.style !== 'string') {
+        throw 'Field "style" must be of type string ' + JSON.stringify(component);
+      }
+
+      if (component.attrs !== undefined && _typeof(component.attrs) !== 'object') {
+        throw 'Field "attrs" must be of type object ' + JSON.stringify(component);
+      }
+
+      if (component.attrs !== undefined) {
+        Object.keys(component.attrs).forEach(function (key) {
+          if (typeof component.attrs[key] !== 'string') {
+            throw 'All "attrs" must be of type string ' + JSON.stringify(component);
+          }
+        });
+      }
+
+      if (component.events !== undefined && _typeof(component.events) !== 'object') {
+        throw 'Field "events" must be of type object ' + JSON.stringify(component);
+      }
+
+      if (component.events !== undefined) {
+        Object.keys(component.events).forEach(function (key) {
+          if (typeof component.events[key] !== 'function') {
+            throw 'All "events" must be of type function ' + JSON.stringify(component);
+          }
+        });
+      }
+
+      if (component.child !== undefined && _typeof(component.child) !== 'object') {
+        throw 'Field "child" must be of type object ' + JSON.stringify(component);
+      }
+
+      if (component.children !== undefined && !Array.isArray(component.children)) {
+        throw 'Field "children" must be an array ' + JSON.stringify(component);
+      }
     }
   }]);
 
@@ -283,195 +307,107 @@ var Framework = /*#__PURE__*/function () {
 }();
 
 exports.default = Framework;
-},{"./components/State":"components/State.js"}],"components/Block.js":[function(require,module,exports) {
+},{}],"State.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
   value: true
 });
 exports.default = void 0;
+// state.js is a singleton object, so it can be imported everywhere and share the same state
+var _default = {
+  init: function init(framework) {
+    this.framework = framework;
+    this.boxDim = [100, 40];
+    this.page = 'start';
+  },
 
-var _State = _interopRequireDefault(require("./State"));
+  // methods for modifying the state
+  get actions() {
+    var _this = this;
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = function _default(number) {
-  var className = 'block';
-  if (number === _State.default.selected) className += ' selected';
-  return {
-    tag: 'div',
-    attrs: {
-      class: className
-    },
-    events: {
-      click: function click() {
-        return _State.default.dispatch('select', number);
+    return {
+      setBoxDim: function setBoxDim(dim) {
+        return _this.boxDim = dim;
+      },
+      setPage: function setPage(page) {
+        return _this.page = page;
       }
-    },
-    children: [{
-      text: "block ".concat(number)
-    }, {
-      tag: 'br'
-    }, {
-      text: "selected ".concat(_State.default.selected)
-    }]
-  };
-};
+    };
+  },
 
-exports.default = _default;
-},{"./State":"components/State.js"}],"components/SwitchButton.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _State = _interopRequireDefault(require("./State"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = function _default() {
-  return {
-    tag: 'button',
-    child: {
-      text: 'switch'
-    },
-    events: {
-      click: function click() {
-        _State.default.dispatch('setTransparent');
-
-        _State.default.dispatch('select', null);
-
-        setTimeout(function () {
-          _State.default.dispatch('switch');
-
-          _State.default.dispatch('setOpaque');
-        }, _State.default.cssVars.transitionSpeedMS);
-      }
-    }
-  };
-};
-
-exports.default = _default;
-},{"./State":"components/State.js"}],"components/Page1.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _Block = _interopRequireDefault(require("./Block"));
-
-var _SwitchButton = _interopRequireDefault(require("./SwitchButton"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = function _default() {
-  return {
-    tag: 'div',
-    children: [(0, _Block.default)(0), (0, _Block.default)(1), (0, _Block.default)(2), (0, _SwitchButton.default)()]
-  };
-};
-
-exports.default = _default;
-},{"./Block":"components/Block.js","./SwitchButton":"components/SwitchButton.js"}],"components/SmallSquare.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _default = function _default() {
-  return {
-    tag: 'div',
-    attrs: {
-      class: 'square'
-    }
-  };
-};
-
-exports.default = _default;
-},{}],"components/Page2.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _SwitchButton = _interopRequireDefault(require("./SwitchButton"));
-
-var _SmallSquare = _interopRequireDefault(require("./SmallSquare"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-function _toConsumableArray(arr) { return _arrayWithoutHoles(arr) || _iterableToArray(arr) || _unsupportedIterableToArray(arr) || _nonIterableSpread(); }
-
-function _nonIterableSpread() { throw new TypeError("Invalid attempt to spread non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method."); }
-
-function _unsupportedIterableToArray(o, minLen) { if (!o) return; if (typeof o === "string") return _arrayLikeToArray(o, minLen); var n = Object.prototype.toString.call(o).slice(8, -1); if (n === "Object" && o.constructor) n = o.constructor.name; if (n === "Map" || n === "Set") return Array.from(o); if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen); }
-
-function _iterableToArray(iter) { if (typeof Symbol !== "undefined" && Symbol.iterator in Object(iter)) return Array.from(iter); }
-
-function _arrayWithoutHoles(arr) { if (Array.isArray(arr)) return _arrayLikeToArray(arr); }
-
-function _arrayLikeToArray(arr, len) { if (len == null || len > arr.length) len = arr.length; for (var i = 0, arr2 = new Array(len); i < len; i++) { arr2[i] = arr[i]; } return arr2; }
-
-var _default = function _default() {
-  var numSquares = 10000;
-  return {
-    tag: 'div',
-    children: [{
-      text: "Page 2 with ".concat(numSquares, " squares. check console for render time")
-    }, {
-      tag: 'br'
-    }, (0, _SwitchButton.default)(), {
-      tag: 'br'
-    }].concat(_toConsumableArray(new Array(numSquares).fill((0, _SmallSquare.default)())))
-  };
-};
-
-exports.default = _default;
-},{"./SwitchButton":"components/SwitchButton.js","./SmallSquare":"components/SmallSquare.js"}],"components/App.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _State = _interopRequireDefault(require("./State"));
-
-var _Page = _interopRequireDefault(require("./Page1"));
-
-var _Page2 = _interopRequireDefault(require("./Page2"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = function _default() {
-  if (_State.default.page === '1') {
-    return (0, _Page.default)();
-  } else {
-    return (0, _Page2.default)();
+  dispatch: function dispatch(action, arg) {
+    console.log('dipatched', action, arg);
+    this.actions[action](arg);
+    this.framework.render();
   }
 };
+exports.default = _default;
+},{}],"components/Box.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _State = _interopRequireDefault(require("../State"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = function _default() {
+  return {
+    name: 'box',
+    tag: 'div',
+    events: {
+      click: function click() {
+        return _State.default.dispatch('setBoxDim', [500, 300]);
+      }
+    },
+    style: "\n            width: ".concat(_State.default.boxDim[0], "px;\n            height: ").concat(_State.default.boxDim[1], "px;\n            max-width: 100vw;\n            border: 1px solid grey;\n            transition: 0.5s;\n        ")
+  };
+};
 
 exports.default = _default;
-},{"./State":"components/State.js","./Page1":"components/Page1.js","./Page2":"components/Page2.js"}],"index.js":[function(require,module,exports) {
+},{"../State":"State.js"}],"components/App.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Box = _interopRequireDefault(require("./Box"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = function _default() {
+  return {
+    name: 'app',
+    tag: 'div',
+    attrs: {
+      class: 'grid3x3'
+    },
+    style: "\n            width: 100vw;\n            height: 100vh;\n            overflow: hidden;\n        ",
+    child: (0, _Box.default)()
+  };
+};
+
+exports.default = _default;
+},{"./Box":"components/Box.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _Framework = _interopRequireDefault(require("./Framework"));
+
+var _State = _interopRequireDefault(require("./State"));
 
 var _App = _interopRequireDefault(require("./components/App"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 // render into the div with id='app'
-new _Framework.default('app', _App.default).render();
-},{"./Framework":"Framework.js","./components/App":"components/App.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+new _Framework.default('app', _State.default, _App.default).render();
+},{"./Framework":"Framework.js","./State":"State.js","./components/App":"components/App.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -499,7 +435,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "63223" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "56565" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

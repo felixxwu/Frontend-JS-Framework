@@ -1,11 +1,15 @@
-import State from './State'
-import Page1 from './Page1'
-import Page2 from './Page2'
+import Box from './Box'
 
 export default () => {
-    if (State.page === '1') {
-        return Page1()
-    } else {
-        return Page2()
+    return {
+        name: 'app',
+        tag: 'div',
+        attrs: { class: 'grid3x3' },
+        style: `
+            width: 100vw;
+            height: 100vh;
+            overflow: hidden;
+        `,
+        child: Box()
     }
 }
