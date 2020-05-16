@@ -1,4 +1,4 @@
-import { div, text } from '../Framework/Framework'
+import { div, text } from '../../Framework/Framework'
 
 export default div()
     .class('example')

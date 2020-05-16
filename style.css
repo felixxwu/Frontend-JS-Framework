@@ -3,8 +3,6 @@
 @import './stylesheets/box.css';
 @import './stylesheets/button.css';
 
-.example {
-    width: 300px;
-    min-height: 200px;
-    border: 1px grey solid;
+body {
+    margin: 0;
 }

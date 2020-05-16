@@ -117,7 +117,7 @@ parcelRequire = (function (modules, cache, entry, globalName) {
   }
 
   return newRequire;
-})({"Framework/Component.js":[function(require,module,exports) {
+})({"../Framework/Component.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -151,7 +151,7 @@ var Component = function Component(tag) {
 };
 
 exports.default = Component;
-},{}],"Framework/TextComponent.js":[function(require,module,exports) {
+},{}],"../Framework/TextComponent.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -171,7 +171,7 @@ var TextComponent = function TextComponent() {
 };
 
 exports.default = TextComponent;
-},{}],"Framework/Renderer.js":[function(require,module,exports) {
+},{}],"../Framework/Renderer.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -268,7 +268,7 @@ var _default = {
   }
 };
 exports.default = _default;
-},{}],"Framework/State.js":[function(require,module,exports) {
+},{}],"../Framework/State.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -322,7 +322,7 @@ var State = /*#__PURE__*/function () {
 }();
 
 exports.default = State;
-},{}],"Framework/Framework.js":[function(require,module,exports) {
+},{}],"../Framework/Framework.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -479,7 +479,7 @@ var h6 = function h6() {
 };
 
 exports.h6 = h6;
-},{"./Component":"Framework/Component.js","./TextComponent":"Framework/TextComponent.js","./Renderer":"Framework/Renderer.js","./State":"Framework/State.js"}],"components/state.js":[function(require,module,exports) {
+},{"./Component":"../Framework/Component.js","./TextComponent":"../Framework/TextComponent.js","./Renderer":"../Framework/Renderer.js","./State":"../Framework/State.js"}],"components/Example1.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -487,26 +487,12 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _State = _interopRequireDefault(require("../Framework/State"));
+var _Framework = require("../../Framework/Framework");
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = new _State.default({
-  count: 0,
-  boxExpanding: false,
-  incrementCount: function incrementCount(amount) {
-    this.count += amount;
-  },
-  resetCount: function resetCount() {
-    this.count = 0;
-  },
-  setBoxExpanding: function setBoxExpanding(bool) {
-    this.boxExpanding = bool;
-  }
-});
+var _default = (0, _Framework.div)().class('example');
 
 exports.default = _default;
-},{"../Framework/State":"Framework/State.js"}],"components/Counter.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example2.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -514,20 +500,31 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _Framework = require("../Framework/Framework");
+var _Framework = require("../../Framework/Framework");
 
-var _state = _interopRequireDefault(require("./state"));
+var _default = (0, _Framework.div)().class('example').children([(0, _Framework.text)('I am a text component!')]);
 
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example3.js":[function(require,module,exports) {
+"use strict";
 
-var _default = (0, _Framework.div)().class('a2').onCreate(function () {
-  _state.default.subscribe(this, 'count');
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _default = (0, _Framework.div)().class('example').localState({
+  text: 'I am a text component!'
+}).event.click(function () {
+  this.localState.text = 'I was clicked!';
 }).children(function () {
-  return [(0, _Framework.text)("Count: ".concat(_state.default.state.count))];
+  return [(0, _Framework.text)(this.localState.text)];
 });
 
 exports.default = _default;
-},{"../Framework/Framework":"Framework/Framework.js","./state":"components/state.js"}],"components/ExitButton.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example4.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -535,16 +532,22 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _Framework = require("../Framework/Framework");
+var _Framework = require("../../Framework/Framework");
 
-var _default = function _default(handler) {
-  return (0, _Framework.div)().class('a8 grid3x3').style(function () {
-    return "\n                width: 100px;\n                height: 50px;\n                border: 1px solid grey;\n                cursor: pointer;\n            ";
-  }).event.click(handler).children([(0, _Framework.div)().children([(0, _Framework.text)('exit')])]);
-};
+var _default = (0, _Framework.div)().class('example').localState({
+  text: 'I am a text component!',
+  dimensions: [200, 300]
+}).style(function () {
+  return "\n            height: ".concat(this.localState.dimensions[0], "px;\n            width: ").concat(this.localState.dimensions[1], "px;\n            transition: 1s;\n        ");
+}).event.click(function () {
+  this.localState.text = 'I was clicked!';
+  this.localState.dimensions = [300, 500];
+}).children(function () {
+  return [(0, _Framework.text)(this.localState.text)];
+});
 
 exports.default = _default;
-},{"../Framework/Framework":"Framework/Framework.js"}],"components/Button.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example5child.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -552,30 +555,16 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _Framework = require("../Framework/Framework");
-
-var _state = _interopRequireDefault(require("./state"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+var _Framework = require("../../Framework/Framework");
 
 var _default = function _default(number) {
-  var className = '';
-  if (number === 1) className = 'a4';
-  if (number === 2) className = 'a5';
-  if (number === 3) className = 'a6';
-  return (0, _Framework.div)().class("".concat(className, " grid3x3 button")).localState({
-    myCount: 0
-  }).event.click(function () {
-    this.localState.myCount += 1;
-
-    _state.default.state.incrementCount(number);
-  }).children(function () {
-    return [(0, _Framework.div)().children([(0, _Framework.text)("+".concat(number, " (").concat(this.localState.myCount, ")"))])];
+  return (0, _Framework.div)().children(function () {
+    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I am a child component with prop: ".concat(number))];
   });
 };
 
 exports.default = _default;
-},{"../Framework/Framework":"Framework/Framework.js","./state":"components/state.js"}],"components/Box.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example5.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -583,82 +572,37 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _Framework = require("../Framework/Framework");
+var _Framework = require("../../Framework/Framework");
 
-var _state = _interopRequireDefault(require("./state"));
-
-var _Counter = _interopRequireDefault(require("./Counter"));
-
-var _ExitButton = _interopRequireDefault(require("./ExitButton"));
-
-var _Button = _interopRequireDefault(require("./Button"));
+var _Example5child = _interopRequireDefault(require("./Example5child"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var states = Object.freeze({
-  START: 1,
-  EXPANDING: 2,
-  EXPANDED: 3
+var _default = (0, _Framework.div)().class('example').children([(0, _Example5child.default)(1), (0, _Framework.br)(), (0, _Example5child.default)(2)]);
+
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example5child":"components/Example5child.js"}],"components/Example6child.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
 });
-var dimensions = {
-  START: [100, 50],
-  EXPANDED: [500, 300]
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _default = function _default(number) {
+  return (0, _Framework.div)().localState({
+    count: 0
+  }).event.click(function () {
+    this.localState.count++;
+  }).children(function () {
+    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
+  });
 };
-var animationTime = 0.5;
-
-var _default = (0, _Framework.div)().class('box grid3x3').localState({
-  dimensions: dimensions.START,
-  state: states.START,
-  opacity: 0,
-  text: 'start'
-}).style(function () {
-  return "\n            width: ".concat(this.localState.dimensions[0], "px;\n            height: ").concat(this.localState.dimensions[1], "px;\n            transition: ").concat(animationTime, "s;\n            cursor: ").concat(this.localState.state === states.START ? 'pointer' : 'initial', ";\n            opacity: ").concat(this.localState.opacity, ";\n        ");
-}).event.click(function () {
-  var _this = this;
-
-  if (this.localState.state === states.EXPANDED) return;
-  this.localState.dimensions = dimensions.EXPANDED;
-  this.localState.state = states.EXPANDING;
-
-  _state.default.state.setBoxExpanding(true);
-
-  setTimeout(function () {
-    _this.localState.state = states.EXPANDED;
-
-    _state.default.state.setBoxExpanding(false);
-  }, animationTime * 1000);
-}).onCreate(function () {
-  this.localState.opacity = 1;
-
-  _state.default.subscribe(this, 'boxExpanding');
-}).children(function () {
-  var _this2 = this;
-
-  var start = [(0, _Framework.div)().children([(0, _Framework.text)('start')])];
-
-  var exitHandler = function exitHandler() {
-    _this2.localState.dimensions = dimensions.START;
-    _this2.localState.state = states.EXPANDING;
-
-    _state.default.state.resetCount();
-
-    _state.default.state.setBoxExpanding(true);
-
-    setTimeout(function () {
-      _this2.localState.state = states.START;
-
-      _state.default.state.setBoxExpanding(false);
-    }, animationTime * 1000);
-  };
-
-  var buttons = [_Counter.default, (0, _Button.default)(1), (0, _Button.default)(2), (0, _Button.default)(3), (0, _ExitButton.default)(exitHandler)];
-  if (this.localState.state === states.START) return start;
-  if (this.localState.state === states.EXPANDING) return [];
-  if (this.localState.state === states.EXPANDED) return buttons;
-});
 
 exports.default = _default;
-},{"../Framework/Framework":"Framework/Framework.js","./state":"components/state.js","./Counter":"components/Counter.js","./ExitButton":"components/ExitButton.js","./Button":"components/Button.js"}],"components/App.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example6.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -666,26 +610,131 @@ Object.defineProperty(exports, "__esModule", {
 });
 exports.default = void 0;
 
-var _Framework = require("../Framework/Framework");
+var _Framework = require("../../Framework/Framework");
 
-var _Box = _interopRequireDefault(require("./Box"));
+var _Example6child = _interopRequireDefault(require("./Example6child"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = (0, _Framework.div)().class('app grid3x3').children([_Box.default]);
+var _default = (0, _Framework.div)().class('example').children([(0, _Example6child.default)(1), (0, _Framework.br)(), (0, _Example6child.default)(2)]);
 
 exports.default = _default;
-},{"../Framework/Framework":"Framework/Framework.js","./Box":"components/Box.js"}],"index.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example6child":"components/Example6child.js"}],"components/Example7State.js":[function(require,module,exports) {
 "use strict";
 
-var _App = _interopRequireDefault(require("./components/App"));
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 
-var _Framework = require("./Framework/Framework");
+var _State = _interopRequireDefault(require("../../Framework/State"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-_Framework.Renderer.render(_App.default, 'app');
-},{"./components/App":"components/App.js","./Framework/Framework":"Framework/Framework.js"}],"node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+var _default = new _State.default({
+  totalCount: 0,
+  incrementCount: function incrementCount(amount) {
+    this.totalCount += amount;
+  }
+});
+
+exports.default = _default;
+},{"../../Framework/State":"../Framework/State.js"}],"components/Example7child.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _Example7State = _interopRequireDefault(require("./Example7State"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = function _default(number) {
+  return (0, _Framework.div)().localState({
+    count: 0
+  }).event.click(function () {
+    this.localState.count++;
+
+    _Example7State.default.state.incrementCount(number);
+  }).children(function () {
+    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
+  });
+};
+
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example7State":"components/Example7State.js"}],"components/Example7ChildState.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _Example7State = _interopRequireDefault(require("./Example7State"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = (0, _Framework.h1)().onCreate(function () {
+  _Example7State.default.subscribe(this, 'totalCount');
+}).children(function () {
+  return [(0, _Framework.text)('Total count: ' + _Example7State.default.state.totalCount)];
+});
+
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example7State":"components/Example7State.js"}],"components/Example7.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _Example7child = _interopRequireDefault(require("./Example7child"));
+
+var _Example7ChildState = _interopRequireDefault(require("./Example7ChildState"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = (0, _Framework.div)().class('example').children([_Example7ChildState.default, (0, _Example7child.default)(1), (0, _Framework.br)(), (0, _Example7child.default)(2)]);
+
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example7child":"components/Example7child.js","./Example7ChildState":"components/Example7ChildState.js"}],"index.js":[function(require,module,exports) {
+"use strict";
+
+var _Framework = require("../Framework/Framework");
+
+var _Example = _interopRequireDefault(require("./components/Example1"));
+
+var _Example2 = _interopRequireDefault(require("./components/Example2"));
+
+var _Example3 = _interopRequireDefault(require("./components/Example3"));
+
+var _Example4 = _interopRequireDefault(require("./components/Example4"));
+
+var _Example5 = _interopRequireDefault(require("./components/Example5"));
+
+var _Example6 = _interopRequireDefault(require("./components/Example6"));
+
+var _Example7 = _interopRequireDefault(require("./components/Example7"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+// Renderer.render(Example1, 'app')
+// Renderer.render(Example2, 'app')
+// Renderer.render(Example3, 'app')
+// Renderer.render(Example4, 'app')
+// Renderer.render(Example5, 'app')
+// Renderer.render(Example6, 'app')
+_Framework.Renderer.render(_Example7.default, 'app');
+},{"../Framework/Framework":"../Framework/Framework.js","./components/Example1":"components/Example1.js","./components/Example2":"components/Example2.js","./components/Example3":"components/Example3.js","./components/Example4":"components/Example4.js","./components/Example5":"components/Example5.js","./components/Example6":"components/Example6.js","./components/Example7":"components/Example7.js"}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -713,7 +762,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49743" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52699" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};
@@ -889,5 +938,5 @@ function hmrAcceptRun(bundle, id) {
     return true;
   }
 }
-},{}]},{},["node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
-//# sourceMappingURL=/framework.e31bb0bc.js.map
+},{}]},{},["../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js","index.js"], null)
+//# sourceMappingURL=/tutorial.e31bb0bc.js.map

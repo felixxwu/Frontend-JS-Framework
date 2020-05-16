@@ -13,6 +13,8 @@ export default (handler) => {
         })
         .event.click(handler)
         .children([
-            div().children([text('exit')])
+            div().children([
+                text('exit')
+            ])
         ])
 }

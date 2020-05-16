@@ -1,4 +1,4 @@
-import { text, div, h1 } from '../Framework/Framework'
+import { text, div, h1 } from '../../Framework/Framework'
 import State from './Example7State'
 
 export default h1()

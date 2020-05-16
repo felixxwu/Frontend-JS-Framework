@@ -1,5 +1,5 @@
-import { div, br } from '../Framework/Framework'
-import ExampleChild from './Example6child'
+import { div, br } from '../../Framework/Framework'
+import ExampleChild from './Example5child'
 
 export default div()
     .class('example')

@@ -1,4 +1,4 @@
-import { div, br } from '../Framework/Framework'
+import { div, br } from '../../Framework/Framework'
 import ExampleChild from './Example7child'
 import ExampleChildState from './Example7ChildState'
 

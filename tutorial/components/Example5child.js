@@ -1,4 +1,4 @@
-import { text, div, h1, h6 } from '../Framework/Framework'
+import { text, div, h1, h6 } from '../../Framework/Framework'
 
 export default (number) => {
     return div()
