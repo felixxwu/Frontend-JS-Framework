@@ -133,7 +133,7 @@ var Component = function Component(tag) {
   this.tag = tag;
   this.id = null;
   this.attributes = {};
-  this.data = {};
+  this.localState = {};
   this.events = {};
   this.listeners = [];
 
@@ -183,7 +183,7 @@ var _default = {
   render: function render(component, id) {
     var isProxy = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : true;
     var t0 = performance.now();
-    var componentObject = isProxy ? component.$component : component;
+    var componentObject = isProxy ? component.component : component;
     var render = this.renderComponent(componentObject, id);
     var element = document.getElementById(id);
     element && element.parentNode.replaceChild(render, element);
@@ -251,7 +251,7 @@ var _default = {
 
     var children = typeof component.children === 'function' ? component.children.bind(component)() : component.children;
     children.forEach(function (child, index) {
-      var childElement = _this2.renderComponent(child.$component, id + '-' + index);
+      var childElement = _this2.renderComponent(child.component, id + '-' + index);
 
       element.appendChild(childElement);
     });
@@ -340,7 +340,7 @@ Object.defineProperty(exports, "State", {
     return _State.default;
   }
 });
-exports.br = exports.text = exports.div = void 0;
+exports.br = exports.div = exports.text = void 0;
 
 var _Component = _interopRequireDefault(require("./Component"));
 
@@ -355,17 +355,17 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var componentProxy = function componentProxy(component) {
   return new Proxy(component, {
     get: function get(_, property) {
-      if (property === '$event') {
+      if (property === 'event') {
         return this.getEventSetter();
-      } else if (property === '$data') {
-        return this.setData;
-      } else if (property === '$listeners') {
+      } else if (property === 'localState') {
+        return this.setLocalState;
+      } else if (property === 'listeners') {
         return this.setListeners;
-      } else if (property === '$children') {
+      } else if (property === 'children') {
         return this.setChildren;
-      } else if (property === '$onCreate') {
+      } else if (property === 'onCreate') {
         return this.setOnCreate;
-      } else if (property === '$component') {
+      } else if (property === 'component') {
         return component;
       } else {
         return this.getAttributeSetter(property);
@@ -398,11 +398,11 @@ var componentProxy = function componentProxy(component) {
       component.attributes[property] = value;
       return componentProxy(component);
     },
-    setData: function setData(data) {
-      component.data = new Proxy(data, {
+    setLocalState: function setLocalState(localState) {
+      component.localState = new Proxy(localState, {
         set: function set(target, key, value) {
           target[key] = value;
-          console.log('data', key, '=', value);
+          console.log('localState', key, '=', value);
           component.rerender();
           return true;
         }
@@ -426,7 +426,7 @@ var componentProxy = function componentProxy(component) {
 
 var text = function text(content) {
   return {
-    $component: new _TextComponent.default(content)
+    component: new _TextComponent.default(content)
   };
 };
 
@@ -484,11 +484,9 @@ var _state = _interopRequireDefault(require("../state"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = (0, _Framework.div)().class('a2').$data({
-  opacity: 0
-}).$onCreate(function () {
+var _default = (0, _Framework.div)().class('a2').onCreate(function () {
   _state.default.subscribe(this, 'count');
-}).$children(function () {
+}).children(function () {
   return [(0, _Framework.text)("Count: ".concat(_state.default.state.count))];
 });
 
@@ -506,7 +504,7 @@ var _Framework = require("../Framework/Framework");
 var _default = function _default(handler) {
   return (0, _Framework.div)().class('a8 grid3x3').style(function () {
     return "\n                width: 100px;\n                height: 50px;\n                border: 1px solid grey;\n                cursor: pointer;\n            ";
-  }).$event.click(handler).$children([(0, _Framework.div)().$children([(0, _Framework.text)('exit')])]);
+  }).event.click(handler).children([(0, _Framework.div)().children([(0, _Framework.text)('exit')])]);
 };
 
 exports.default = _default;
@@ -529,14 +527,14 @@ var _default = function _default(number) {
   if (number === 1) className = 'a4';
   if (number === 2) className = 'a5';
   if (number === 3) className = 'a6';
-  return (0, _Framework.div)().class("".concat(className, " grid3x3 button")).$data({
+  return (0, _Framework.div)().class("".concat(className, " grid3x3 button")).localState({
     myCount: 0
-  }).$event.click(function () {
-    this.data.myCount += 1;
+  }).event.click(function () {
+    this.localState.myCount += 1;
 
     _state.default.state.incrementCount(number);
-  }).$children(function () {
-    return [(0, _Framework.div)().$children([(0, _Framework.text)("+".concat(number, " (").concat(this.data.myCount, ")"))])];
+  }).children(function () {
+    return [(0, _Framework.div)().children([(0, _Framework.text)("+".concat(number, " (").concat(this.localState.myCount, ")"))])];
   });
 };
 
@@ -572,55 +570,55 @@ var dimensions = {
 };
 var animationTime = 0.5;
 
-var _default = (0, _Framework.div)().class('box grid3x3').style(function () {
-  return "\n            width: ".concat(this.data.dimensions[0], "px;\n            height: ").concat(this.data.dimensions[1], "px;\n            transition: ").concat(animationTime, "s;\n            cursor: ").concat(this.data.state === states.START ? 'pointer' : 'initial', ";\n            opacity: ").concat(this.data.opacity, ";\n        ");
-}).$data({
+var _default = (0, _Framework.div)().class('box grid3x3').localState({
   dimensions: dimensions.START,
   state: states.START,
   opacity: 0,
   text: 'start'
-}).$event.click(function () {
+}).style(function () {
+  return "\n            width: ".concat(this.localState.dimensions[0], "px;\n            height: ").concat(this.localState.dimensions[1], "px;\n            transition: ").concat(animationTime, "s;\n            cursor: ").concat(this.localState.state === states.START ? 'pointer' : 'initial', ";\n            opacity: ").concat(this.localState.opacity, ";\n        ");
+}).event.click(function () {
   var _this = this;
 
-  if (this.data.state === states.EXPANDED) return;
-  this.data.dimensions = dimensions.EXPANDED;
-  this.data.state = states.EXPANDING;
+  if (this.localState.state === states.EXPANDED) return;
+  this.localState.dimensions = dimensions.EXPANDED;
+  this.localState.state = states.EXPANDING;
 
   _state.default.state.setBoxExpanding(true);
 
   setTimeout(function () {
-    _this.data.state = states.EXPANDED;
+    _this.localState.state = states.EXPANDED;
 
     _state.default.state.setBoxExpanding(false);
   }, animationTime * 1000);
-}).$onCreate(function () {
-  this.data.opacity = 1;
+}).onCreate(function () {
+  this.localState.opacity = 1;
 
   _state.default.subscribe(this, 'boxExpanding');
-}).$children(function () {
+}).children(function () {
   var _this2 = this;
 
-  var start = [(0, _Framework.div)().$children([(0, _Framework.text)('start')])];
+  var start = [(0, _Framework.div)().children([(0, _Framework.text)('start')])];
 
   var exitHandler = function exitHandler() {
-    _this2.data.dimensions = dimensions.START;
-    _this2.data.state = states.EXPANDING;
+    _this2.localState.dimensions = dimensions.START;
+    _this2.localState.state = states.EXPANDING;
 
     _state.default.state.resetCount();
 
     _state.default.state.setBoxExpanding(true);
 
     setTimeout(function () {
-      _this2.data.state = states.START;
+      _this2.localState.state = states.START;
 
       _state.default.state.setBoxExpanding(false);
     }, animationTime * 1000);
   };
 
   var buttons = [_Counter.default, (0, _Button.default)(1), (0, _Button.default)(2), (0, _Button.default)(3), (0, _ExitButton.default)(exitHandler)];
-  if (this.data.state === states.START) return start;
-  if (this.data.state === states.EXPANDING) return [];
-  if (this.data.state === states.EXPANDED) return buttons;
+  if (this.localState.state === states.START) return start;
+  if (this.localState.state === states.EXPANDING) return [];
+  if (this.localState.state === states.EXPANDED) return buttons;
 });
 
 exports.default = _default;
@@ -638,7 +636,7 @@ var _Box = _interopRequireDefault(require("./Box"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = (0, _Framework.div)().class('app grid3x3').$children([_Box.default]);
+var _default = (0, _Framework.div)().class('app grid3x3').children([_Box.default]);
 
 exports.default = _default;
 },{"../Framework/Framework":"Framework/Framework.js","./Box":"components/Box.js"}],"index.js":[function(require,module,exports) {

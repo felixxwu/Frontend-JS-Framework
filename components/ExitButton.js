@@ -11,8 +11,8 @@ export default (handler) => {
                 cursor: pointer;
             `
         })
-        .$event.click(handler)
-        .$children([
-            div().$children([text('exit')])
+        .event.click(handler)
+        .children([
+            div().children([text('exit')])
         ])
 }

@@ -10,53 +10,53 @@ const animationTime = 0.5
 
 export default div()
     .class('box grid3x3')
-    .style(function() {
-        return `
-            width: ${this.data.dimensions[0]}px;
-            height: ${this.data.dimensions[1]}px;
-            transition: ${animationTime}s;
-            cursor: ${this.data.state === states.START ? 'pointer' : 'initial'};
-            opacity: ${this.data.opacity};
-        `
-    })
-    .$data({
+    .localState({
         dimensions: dimensions.START,
         state: states.START,
         opacity: 0,
         text: 'start'
     })
-    .$event.click(function() {
-        if (this.data.state === states.EXPANDED) return
+    .style(function() {
+        return `
+            width: ${this.localState.dimensions[0]}px;
+            height: ${this.localState.dimensions[1]}px;
+            transition: ${animationTime}s;
+            cursor: ${this.localState.state === states.START ? 'pointer' : 'initial'};
+            opacity: ${this.localState.opacity};
+        `
+    })
+    .event.click(function() {
+        if (this.localState.state === states.EXPANDED) return
 
-        this.data.dimensions = dimensions.EXPANDED
-        this.data.state = states.EXPANDING
+        this.localState.dimensions = dimensions.EXPANDED
+        this.localState.state = states.EXPANDING
         
         State.state.setBoxExpanding(true)
         setTimeout(() => {
-            this.data.state = states.EXPANDED
+            this.localState.state = states.EXPANDED
             State.state.setBoxExpanding(false)
         }, animationTime * 1000);
     })
-    .$onCreate(function() {
-        this.data.opacity = 1
+    .onCreate(function() {
+        this.localState.opacity = 1
         State.subscribe(this, 'boxExpanding')
     })
-    .$children(function() {
-        const start = [div().$children([text('start')])]
+    .children(function() {
+        const start = [div().children([text('start')])]
         const exitHandler = () => {
-            this.data.dimensions = dimensions.START
-            this.data.state = states.EXPANDING
+            this.localState.dimensions = dimensions.START
+            this.localState.state = states.EXPANDING
             
             State.state.resetCount()
             State.state.setBoxExpanding(true)
             setTimeout(() => {
-                this.data.state = states.START
+                this.localState.state = states.START
                 State.state.setBoxExpanding(false)
             }, animationTime * 1000);
         }
         const buttons = [Counter, Button(1), Button(2), Button(3), ExitButton(exitHandler)]
         
-        if (this.data.state === states.START) return start
-        if (this.data.state === states.EXPANDING) return []
-        if (this.data.state === states.EXPANDED) return buttons
+        if (this.localState.state === states.START) return start
+        if (this.localState.state === states.EXPANDING) return []
+        if (this.localState.state === states.EXPANDED) return buttons
     })

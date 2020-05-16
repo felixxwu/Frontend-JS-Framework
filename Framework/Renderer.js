@@ -4,7 +4,7 @@ export default {
     render(component, id, isProxy = true) {
         const t0 = performance.now()
 
-        const componentObject = isProxy ? component.$component : component
+        const componentObject = isProxy ? component.component : component
         const render = this.renderComponent(componentObject, id)
         const element = document.getElementById(id)
         element && element.parentNode.replaceChild(render, element)
@@ -70,7 +70,7 @@ export default {
             component.children.bind(component)():
             component.children
         children.forEach((child, index) => {
-            const childElement = this.renderComponent(child.$component, id + '-' + index)
+            const childElement = this.renderComponent(child.component, id + '-' + index)
             element.appendChild(childElement)
         })
     },

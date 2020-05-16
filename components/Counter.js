@@ -3,13 +3,10 @@ import State from '../state'
 
 export default div()
     .class('a2')
-    .$data({
-        opacity: 0
-    })
-    .$onCreate(function() {
+    .onCreate(function() {
         State.subscribe(this, 'count')
     })
-    .$children(function() {
+    .children(function() {
         return [
             text(`Count: ${State.state.count}`)
         ]

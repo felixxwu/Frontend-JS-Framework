@@ -9,17 +9,17 @@ export default (number) => {
 
     return div()
         .class(`${className} grid3x3 button`)
-        .$data({
+        .localState({
             myCount: 0,
         })
-        .$event.click(function() {
-            this.data.myCount += 1
+        .event.click(function() {
+            this.localState.myCount += 1
             State.state.incrementCount(number)
         })
-        .$children(function() {
+        .children(function() {
             return [
-                div().$children([
-                    text(`+${number} (${this.data.myCount})`
+                div().children([
+                    text(`+${number} (${this.localState.myCount})`
                 )])
             ]
         })

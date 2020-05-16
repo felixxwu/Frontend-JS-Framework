@@ -3,7 +3,7 @@ export default class Component {
         this.tag = tag
         this.id = null
         this.attributes = {}
-        this.data = {}
+        this.localState = {}
         this.events = {}
         this.listeners = []
         this.children = () => []

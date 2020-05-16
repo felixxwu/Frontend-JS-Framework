@@ -5,22 +5,22 @@ import State from './State'
 
 const componentProxy = (component) => new Proxy(component, {
     get(_, property) {
-        if (property === '$event') {
+        if (property === 'event') {
             return this.getEventSetter()
 
-        } else if (property === '$data') {
-            return this.setData
+        } else if (property === 'localState') {
+            return this.setLocalState
 
-        } else if (property === '$listeners') {
+        } else if (property === 'listeners') {
             return this.setListeners
 
-        } else if (property === '$children') {
+        } else if (property === 'children') {
             return this.setChildren
 
-        } else if (property === '$onCreate') {
+        } else if (property === 'onCreate') {
             return this.setOnCreate
 
-        } else if (property === '$component') {
+        } else if (property === 'component') {
             return component
 
         } else {
@@ -49,11 +49,11 @@ const componentProxy = (component) => new Proxy(component, {
         component.attributes[property] = value
         return componentProxy(component)
     },
-    setData(data) {
-        component.data = new Proxy(data, {
+    setLocalState(localState) {
+        component.localState = new Proxy(localState, {
             set: (target, key, value) => {
                 target[key] = value;
-                console.log('data', key, '=', value)
+                console.log('localState', key, '=', value)
                 component.rerender()
                 return true;
             }
@@ -75,8 +75,8 @@ const componentProxy = (component) => new Proxy(component, {
 
 })
 
-const text = (content) => ({$component: new TextComponent(content)})
+const text = (content) => ({component: new TextComponent(content)})
 const div = () => componentProxy(new Component('div'))
 const br = () => componentProxy(new Component('br'))
 
-export { Renderer, State, div, text, br }
+export { Renderer, State, text, div, br }
