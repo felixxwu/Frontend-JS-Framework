@@ -44,8 +44,10 @@ Each centered child needs either a tag a1-9 or a class a1-9 to specify location 
     border: solid 1px grey;
     cursor: pointer;
 }
-body {
-    margin: 0;
+.example {
+    width: 300px;
+    min-height: 200px;
+    border: 1px grey solid;
 }
 
 

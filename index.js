@@ -1,11 +1,18 @@
-import NewApp from './components/App'
+import App from './components/App'
+import Example1 from './components/Example1'
 import { Renderer } from './Framework/Framework'
+import Example2 from './components/Example2'
+import Example3 from './components/Example3'
+import Example4 from './components/Example4'
+import Example5 from './components/Example5'
+import Example6 from './components/Example6'
+import Example7 from './components/Example7'
 
-Renderer.render(NewApp, 'app')
-
-// import Framework from './Framework/Framework'
-// import App from './components/App'
-// import StateConfig from './StateConfig'
-
-// // render into the div with id='app'
-// Framework.init(App, 'app', StateConfig)
+Renderer.render(App, 'app')
+// Renderer.render(Example1, 'app')
+// Renderer.render(Example2, 'app')
+// Renderer.render(Example3, 'app')
+// Renderer.render(Example4, 'app')
+// Renderer.render(Example5, 'app')
+// Renderer.render(Example6, 'app')
+// Renderer.render(Example7, 'app')

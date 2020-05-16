@@ -1,5 +1,5 @@
 import { div, text } from '../Framework/Framework'
-import State from '../state'
+import State from './state'
 
 export default (number) => {
     let className = ''

@@ -1,5 +1,5 @@
 import { div, text } from '../Framework/Framework'
-import State from '../state'
+import State from './state'
 import Counter from './Counter'
 import ExitButton from './ExitButton'
 import Button from './Button'

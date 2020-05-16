@@ -78,5 +78,11 @@ const componentProxy = (component) => new Proxy(component, {
 const text = (content) => ({component: new TextComponent(content)})
 const div = () => componentProxy(new Component('div'))
 const br = () => componentProxy(new Component('br'))
+const h1 = () => componentProxy(new Component('h1'))
+const h2 = () => componentProxy(new Component('h2'))
+const h3 = () => componentProxy(new Component('h3'))
+const h4 = () => componentProxy(new Component('h4'))
+const h5 = () => componentProxy(new Component('h5'))
+const h6 = () => componentProxy(new Component('h6'))
 
-export { Renderer, State, text, div, br }
+export { Renderer, State, text, div, br, h1, h2, h3, h4, h5, h6 }
