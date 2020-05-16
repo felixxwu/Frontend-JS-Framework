@@ -1,6 +1,11 @@
-import Framework from './Framework'
-import App from './components/App'
-import StateConfig from './StateConfig'
+import NewApp from './components/App'
+import { Renderer } from './Framework/Framework'
 
-// render into the div with id='app'
-Framework.init(App, 'app', StateConfig)
+Renderer.render(NewApp, 'app')
+
+// import Framework from './Framework/Framework'
+// import App from './components/App'
+// import StateConfig from './StateConfig'
+
+// // render into the div with id='app'
+// Framework.init(App, 'app', StateConfig)

@@ -1,11 +1,16 @@
-import Framework from '../Framework'
+import { div, text } from '../Framework/Framework'
+import State from '../state'
 
-export default {
-    name: 'counter',
-    tag: 'div',
-    attrs: {
-        class: 'a2'
-    },
-    subscribeTo: ['count'],
-    child: () => ({text: `Count: ${Framework.state.count}`})
-}
+export default div()
+    .class('a2')
+    .$data({
+        opacity: 0
+    })
+    .$onCreate(function() {
+        State.subscribe(this, 'count')
+    })
+    .$children(function() {
+        return [
+            text(`Count: ${State.state.count}`)
+        ]
+    })
