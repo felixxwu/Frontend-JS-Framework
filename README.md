@@ -12,3 +12,6 @@ npm install
 ```
 npm run serve
 ```
+
+## Tutorial
+Follow the [Tutorial](https://github.com/felixxwu/Frontend-JS-Framework/blob/master/tutorial/README.md) to get started.
