@@ -1,4 +1,4 @@
-import State from '../../Framework/State'
+import { State } from '../../Framework/Framework'
 
 export default new State({
     totalCount: 0,

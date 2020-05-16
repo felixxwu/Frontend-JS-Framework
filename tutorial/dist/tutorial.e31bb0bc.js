@@ -558,9 +558,7 @@ exports.default = void 0;
 var _Framework = require("../../Framework/Framework");
 
 var _default = function _default(number) {
-  return (0, _Framework.div)().children(function () {
-    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I am a child component with prop: ".concat(number))];
-  });
+  return (0, _Framework.div)().children([(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I am a child component with prop: ".concat(number))]);
 };
 
 exports.default = _default;
@@ -619,27 +617,7 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var _default = (0, _Framework.div)().class('example').children([(0, _Example6child.default)(1), (0, _Framework.br)(), (0, _Example6child.default)(2)]);
 
 exports.default = _default;
-},{"../../Framework/Framework":"../Framework/Framework.js","./Example6child":"components/Example6child.js"}],"components/Example7State.js":[function(require,module,exports) {
-"use strict";
-
-Object.defineProperty(exports, "__esModule", {
-  value: true
-});
-exports.default = void 0;
-
-var _State = _interopRequireDefault(require("../../Framework/State"));
-
-function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
-
-var _default = new _State.default({
-  totalCount: 0,
-  incrementCount: function incrementCount(amount) {
-    this.totalCount += amount;
-  }
-});
-
-exports.default = _default;
-},{"../../Framework/State":"../Framework/State.js"}],"components/Example7child.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example6child":"components/Example6child.js"}],"components/state.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -649,7 +627,25 @@ exports.default = void 0;
 
 var _Framework = require("../../Framework/Framework");
 
-var _Example7State = _interopRequireDefault(require("./Example7State"));
+var _default = new _Framework.State({
+  totalCount: 0,
+  incrementCount: function incrementCount(amount) {
+    this.totalCount += amount;
+  }
+});
+
+exports.default = _default;
+},{"../../Framework/Framework":"../Framework/Framework.js"}],"components/Example7Child.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Framework = require("../../Framework/Framework");
+
+var _state = _interopRequireDefault(require("./state"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -659,14 +655,14 @@ var _default = function _default(number) {
   }).event.click(function () {
     this.localState.count++;
 
-    _Example7State.default.state.incrementCount(number);
+    _state.default.state.incrementCount(number);
   }).children(function () {
     return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
   });
 };
 
 exports.default = _default;
-},{"../../Framework/Framework":"../Framework/Framework.js","./Example7State":"components/Example7State.js"}],"components/Example7ChildState.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./state":"components/state.js"}],"components/Example7CountDisplay.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -676,18 +672,18 @@ exports.default = void 0;
 
 var _Framework = require("../../Framework/Framework");
 
-var _Example7State = _interopRequireDefault(require("./Example7State"));
+var _state = _interopRequireDefault(require("./state"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
 var _default = (0, _Framework.h1)().onCreate(function () {
-  _Example7State.default.subscribe(this, 'totalCount');
+  _state.default.subscribe(this, 'totalCount');
 }).children(function () {
-  return [(0, _Framework.text)('Total count: ' + _Example7State.default.state.totalCount)];
+  return [(0, _Framework.text)('Total count: ' + _state.default.state.totalCount)];
 });
 
 exports.default = _default;
-},{"../../Framework/Framework":"../Framework/Framework.js","./Example7State":"components/Example7State.js"}],"components/Example7.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./state":"components/state.js"}],"components/Example7.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -697,16 +693,16 @@ exports.default = void 0;
 
 var _Framework = require("../../Framework/Framework");
 
-var _Example7child = _interopRequireDefault(require("./Example7child"));
+var _Example7Child = _interopRequireDefault(require("./Example7Child"));
 
-var _Example7ChildState = _interopRequireDefault(require("./Example7ChildState"));
+var _Example7CountDisplay = _interopRequireDefault(require("./Example7CountDisplay"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _default = (0, _Framework.div)().class('example').children([_Example7ChildState.default, (0, _Example7child.default)(1), (0, _Framework.br)(), (0, _Example7child.default)(2)]);
+var _default = (0, _Framework.div)().class('example').children([_Example7CountDisplay.default, (0, _Example7Child.default)(1), (0, _Framework.br)(), (0, _Example7Child.default)(2)]);
 
 exports.default = _default;
-},{"../../Framework/Framework":"../Framework/Framework.js","./Example7child":"components/Example7child.js","./Example7ChildState":"components/Example7ChildState.js"}],"index.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example7Child":"components/Example7Child.js","./Example7CountDisplay":"components/Example7CountDisplay.js"}],"index.js":[function(require,module,exports) {
 "use strict";
 
 var _Framework = require("../Framework/Framework");
