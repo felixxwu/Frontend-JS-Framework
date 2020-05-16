@@ -38,7 +38,7 @@ export default div() // just an empty div element
 
 ## Attributes
 
-HTML tags such as `div`, `button`, `h1` etc. can be imported from the Framework. HTML attributes can be added to the component using `.<attribute>(<value>)`, and can be chained together in any order.
+HTML tags such as `div`, `button`, `h2` etc. can be imported from the Framework. HTML attributes can be added to the component using `.<attribute>(<value>)`, and can be chained together in any order.
 
 During rendering, the HTML elements are created using `document.createElement(tag)`, and the attributes are added using `element.setAttribute(attribute, value)`.
 
@@ -54,11 +54,18 @@ export default div().class('example').style('padding: 10px') // attributes can b
 `/style.css`:
 
 ```css
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
+
 .example {
+    padding: 20px;
+    margin: auto;
+    font-family: 'Lexend Deca', sans-serif;
+    text-align: center;
     width: 300px;
     min-height: 200px;
     border: 1px grey solid;
 }
+
 ```
 
 ![Example 1](images/example1.png)
@@ -170,12 +177,12 @@ export default div()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h1 } from 'Framework'
+import { text, div, h2 } from 'Framework'
 
 export default (number) => { // entire component wrapped in a function call
     return div()
         .children([ // no need to pass function if there are no uses of "this"
-            h1().children([
+            h2().children([
                 text('child ' + number)
             ]),
             text(`I am a child component with prop: ${number}`)
@@ -205,7 +212,7 @@ export default div()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h1 } from 'Framework'
+import { text, div, h2 } from 'Framework'
 
 export default (number) => {
     return div()
@@ -216,7 +223,7 @@ export default (number) => {
             this.localState.count++
         })
         .children(function() { return [
-            h1().children([text('child ' + number)]),
+            h2().children([text('child ' + number)]),
             text(`I have my own local state! click count: ${this.localState.count}.`)
         ]})
 }
@@ -283,7 +290,7 @@ export default h1()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h1 } from 'Framework'
+import { text, div, h2 } from 'Framework'
 import State from './state' // import your state object to get access to te variables and methods
 
 export default (number) => {
@@ -296,8 +303,10 @@ export default (number) => {
             State.state.incrementCount(number)
         })
         .children(function() { return [
-            h1().children([text('child ' + number)]),
-            text(`I have my own local state! click count: ${this.localState.count}.`)
+            h2().children([
+                text('child ' + number)
+            ]),
+            text(`I increase the total count by ${number}. click count: ${this.localState.count}.`)
         ]})
 }
 ```

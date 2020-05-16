@@ -1,7 +1,13 @@
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
+
 .example {
+    font-family: 'Lexend Deca', sans-serif;
+    text-align: center;
     width: 300px;
     min-height: 200px;
     border: 1px grey solid;
+    padding: 20px;
+    margin: auto;
 }
 
 

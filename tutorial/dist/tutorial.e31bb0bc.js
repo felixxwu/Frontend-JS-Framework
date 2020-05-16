@@ -558,7 +558,7 @@ exports.default = void 0;
 var _Framework = require("../../Framework/Framework");
 
 var _default = function _default(number) {
-  return (0, _Framework.div)().children([(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I am a child component with prop: ".concat(number))]);
+  return (0, _Framework.div)().children([(0, _Framework.h2)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I am a child component with prop: ".concat(number))]);
 };
 
 exports.default = _default;
@@ -595,7 +595,7 @@ var _default = function _default(number) {
   }).event.click(function () {
     this.localState.count++;
   }).children(function () {
-    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
+    return [(0, _Framework.h2)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
   });
 };
 
@@ -657,7 +657,7 @@ var _default = function _default(number) {
 
     _state.default.state.incrementCount(number);
   }).children(function () {
-    return [(0, _Framework.h1)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I have my own local state! click count: ".concat(this.localState.count, "."))];
+    return [(0, _Framework.h2)().children([(0, _Framework.text)('child ' + number)]), (0, _Framework.text)("I increase the total count by ".concat(number, ". click count: ").concat(this.localState.count, "."))];
   });
 };
 
@@ -758,7 +758,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "52699" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54376" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

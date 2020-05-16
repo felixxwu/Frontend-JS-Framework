@@ -1,4 +1,4 @@
-import { text, div, h1 } from '../../Framework/Framework'
+import { text, div, h2 } from '../../Framework/Framework'
 import State from './state'
 
 export default (number) => {
@@ -11,7 +11,9 @@ export default (number) => {
             State.state.incrementCount(number)
         })
         .children(function() { return [
-            h1().children([text('child ' + number)]),
-            text(`I have my own local state! click count: ${this.localState.count}.`)
+            h2().children([
+                text('child ' + number)
+            ]),
+            text(`I increase the total count by ${number}. click count: ${this.localState.count}.`)
         ]})
 }

@@ -2,6 +2,7 @@
 @import './stylesheets/grid3x3.css';
 @import './stylesheets/box.css';
 @import './stylesheets/button.css';
+@import url('https://fonts.googleapis.com/css2?family=Lexend+Deca&display=swap');
 
 body {
     margin: 0;
