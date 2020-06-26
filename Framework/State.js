@@ -3,7 +3,7 @@ export default class State {
         this.state = new Proxy(state, {
             set: (target, key, value) => {
                 target[key] = value;
-                console.log('state', key, '=', value)
+                console.log('Global State', key, '=', value)
                 this.updateSubscribers(key)
                 return true;
             }

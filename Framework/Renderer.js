@@ -8,15 +8,19 @@ export default {
         const render = this.renderComponent(componentObject, id)
         const element = document.getElementById(id)
         element && element.parentNode.replaceChild(render, element)
-        
+
         const renderTime = Math.round(performance.now() - t0)
         renderTime > 10 && console.log('Render took', renderTime, 'ms id:', id)
+
+        this.runPostRenderJobs()
     },
     renderComponent(component, id) {
-        // console.log('rendering component', component)
         if (component.tag === null) return this.renderTextComponent(component)
 
+        // set the attribute id, create new if doesnt exist
+        if (!component.attributes) component.attributes = {}
         component.attributes.id = id
+        
         component.rerender = () => this.render(component, id, false)
 
         const element = document.createElement(component.tag)
@@ -27,6 +31,11 @@ export default {
         this.runOnCreate(component)
 
         return element
+    },
+    runPostRenderJobs() {
+        setTimeout(() => {
+            while(postRenderJobs.length !== 0) postRenderJobs.pop()()
+        }, 0)
     },
     renderTextComponent(component) {
         return document.createTextNode(component.text)
@@ -46,14 +55,14 @@ export default {
             element.setAttribute('style', component.oldStyle)
         }
 
-        setTimeout(() => {
+        postRenderJobs.push(() => {
             if (component.attributes.style) {
                 const style = component.attributes.style
                 const styleObject = typeof(style) === 'function' ? style.bind(component)() : style
                 element.setAttribute('style', styleObject)
                 component.oldStyle = styleObject
             }
-        }, 0);
+        });
     },
     setEventHandlers(element, component) {
         const handlers = component.events
@@ -75,12 +84,12 @@ export default {
         })
     },
     runOnCreate(component) {
-        setTimeout(() => {
+        postRenderJobs.push(() => {
             if (component.isNew) {
                 component.onCreate.bind(component)()
                 component.rerender()
             }
             component.isNew = false
-        }, 1);
+        })
     }
 }

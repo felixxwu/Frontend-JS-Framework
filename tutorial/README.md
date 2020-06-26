@@ -22,16 +22,16 @@ To start a local development server, run `npm run start` or `parcel index.html` 
 `/index.js`:
 
 ```javascript
-import { Renderer } from 'Framework'
+import { Renderer } from 'Framework.js'
 
-import Example from './components/Example'
+import Example from './components/Example.js'
 Renderer.render(Example, 'app')
 ```
 
 `/components/Example.js`:
 
 ```javascript
-import { div } from 'Framework'
+import { div } from 'Framework.js'
 
 export default div() // just an empty div element
 ```
@@ -46,7 +46,7 @@ A component that represents a div element with a class attribute.
 `/components/Example.js`:
 
 ```javascript
-import { div } from 'Framework'
+import { div } from 'Framework.js'
 
 export default div().class('example').style('padding: 10px') // attributes can be chained in any order
 ```
@@ -80,7 +80,7 @@ A component with a text element child.
 `/components/Example.js`:
 
 ```javascript
-import { div, text } from 'Framework'
+import { div, text } from 'Framework.js'
 
 export default div()
     .class('example')
@@ -103,7 +103,7 @@ A component that updates its text when clicked.
 `/components/Example.js`:
 
 ```javascript
-import { div, text } from 'Framework'
+import { div, text } from 'Framework.js'
 
 export default div()
     .class('example')
@@ -128,7 +128,7 @@ A component that updates its text and changes its size when clicked.
 `/components/Example.js`:
 
 ```javascript
-import { div, text } from 'Framework'
+import { div, text } from 'Framework.js'
 
 export default div()
     .class('example')
@@ -162,8 +162,8 @@ A component with two children, each given a different prop.
 `/components/Example.js`:
 
 ```javascript
-import { div, br } from 'Framework'
-import ExampleChild from './ExampleChild'
+import { div, br } from 'Framework.js'
+import ExampleChild from './ExampleChild.js'
 
 export default div()
     .class('example')
@@ -177,7 +177,7 @@ export default div()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h2 } from 'Framework'
+import { text, div, h2 } from 'Framework.js'
 
 export default (number) => { // entire component wrapped in a function call
     return div()
@@ -197,8 +197,8 @@ A component with two children, each with local states for counting number of cli
 `/components/Example.js`:
 
 ```javascript
-import { div, br } from 'Framework'
-import ExampleChild from './ExampleChild'
+import { div, br } from 'Framework.js'
+import ExampleChild from './ExampleChild.js'
 
 export default div()
     .class('example')
@@ -212,7 +212,7 @@ export default div()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h2 } from 'Framework'
+import { text, div, h2 } from 'Framework.js'
 
 export default (number) => {
     return div()
@@ -238,7 +238,7 @@ If you want components to talk to each other, you can create a redux-style state
 `/components/state.js`:
 
 ```javascript
-import { State } from 'Framework'
+import { State } from 'Framework.js'
 
 export default new State({
     totalCount: 0, // state variables
@@ -248,7 +248,7 @@ export default new State({
 })
 ```
 
-This object can then be imported into any component that needs it with `import State from './state'` and then `State.state.<variable>` or `State.state.<method>()`. 
+This object can then be imported into any component that needs it with `import State from './state.js'` and then `State.state.<variable>` or `State.state.<method>()`. 
 
 For any component that is affected visually by the state, you must subscribe to a state variable so that the renderer knows to re-render that component when the state variable is changed. This is done with `State.subscribe(this, '<variable>')`.
 
@@ -258,9 +258,9 @@ A component with two children who each increment the total count with different 
 `/components/Example.js`:
 
 ```javascript
-import { div, br } from 'Framework'
-import ExampleChild from './ExampleChild'
-import TotalCount from './TotalCount'
+import { div, br } from 'Framework.js'
+import ExampleChild from './ExampleChild.js'
+import TotalCount from './TotalCount.js'
 
 export default div()
     .class('example')
@@ -275,8 +275,8 @@ export default div()
 `/components/TotalCount.js`:
 
 ```javascript
-import { text, div, h1 } from 'Framework'
-import State from './state' // import your state object to get access to te variables and methods
+import { text, div, h1 } from 'Framework.js'
+import State from './state.js' // import your state object to get access to te variables and methods
 
 export default h1()
     .onCreate(function() { // subscribe to a state variable so the component re-renders whenever it changes
@@ -290,8 +290,8 @@ export default h1()
 `/components/ExampleChild.js`:
 
 ```javascript
-import { text, div, h2 } from 'Framework'
-import State from './state' // import your state object to get access to te variables and methods
+import { text, div, h2 } from 'Framework.js'
+import State from './state.js' // import your state object to get access to te variables and methods
 
 export default (number) => {
     return div()

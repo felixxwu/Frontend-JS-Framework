@@ -1,4 +1,4 @@
-import { div, text } from '../Framework/Framework'
+import { div, text } from '../Framework/Framework.js'
 
 export default (handler) => {
     return div()

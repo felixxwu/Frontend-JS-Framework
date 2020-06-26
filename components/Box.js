@@ -1,8 +1,8 @@
-import { div, text } from '../Framework/Framework'
-import State from './state'
-import Counter from './Counter'
-import ExitButton from './ExitButton'
-import Button from './Button'
+import { div, text } from '../Framework/Framework.js'
+import State from './state.js'
+import Counter from './Counter.js'
+import ExitButton from './ExitButton.js'
+import Button from './Button.js'
 
 const states = Object.freeze({START: 1, EXPANDING: 2, EXPANDED: 3})
 const dimensions = {START: [100, 50], EXPANDED: [500, 300]}

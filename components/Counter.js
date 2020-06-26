@@ -1,5 +1,5 @@
-import { div, text } from '../Framework/Framework'
-import State from './state'
+import { div, text } from '../Framework/Framework.js'
+import State from './state.js'
 
 export default div()
     .class('a2')

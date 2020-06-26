@@ -1,4 +1,4 @@
-import State from '../Framework/State'
+import State from '../Framework/State.js'
 
 export default new State({
     count: 0,
