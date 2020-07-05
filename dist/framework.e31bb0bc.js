@@ -150,7 +150,7 @@ var Component = /*#__PURE__*/function () {
 
     this.onCreate = function () {};
 
-    this.isNew = true;
+    this.isOld = false;
 
     this.rerender = function () {};
   } // a proxy is used to override the behaviour of reading and writing attributes of an object
@@ -286,7 +286,9 @@ var _default = {
   renderComponent: function renderComponent(component, id) {
     var _this = this;
 
-    if (component.tag === null) return this.renderTextComponent(component);
+    if (component.tag === null) return this.renderTextComponent(component); // set the attribute id, create new if doesnt exist
+
+    if (!component.attributes) component.attributes = {};
     component.attributes.id = id;
 
     component.rerender = function () {
@@ -294,10 +296,10 @@ var _default = {
     };
 
     var element = document.createElement(component.tag);
-    this.setAttributes(element, component);
-    this.setChildren(element, component, id);
-    this.setEventHandlers(element, component);
-    this.runOnCreate(component);
+    if (component.attributes) this.setAttributes(element, component);
+    if (component.children) this.setChildren(element, component, id);
+    if (component.events) this.setEventHandlers(element, component);
+    if (component.onCreate) this.runOnCreate(component);
     return element;
   },
   runPostRenderJobs: function runPostRenderJobs() {
@@ -342,6 +344,7 @@ var _default = {
       element.addEventListener(eventName, function (e) {
         handler.bind(component)(e);
         e.stopPropagation();
+        component.rerender();
       });
     });
   },
@@ -350,19 +353,21 @@ var _default = {
 
     var children = typeof component.children === 'function' ? component.children.bind(component)() : component.children;
     children.forEach(function (child, index) {
-      var childElement = _this2.renderComponent(child.component, id + '-' + index);
+      var childComponent = child.component ? child.component : child;
+
+      var childElement = _this2.renderComponent(childComponent, id + '-' + index);
 
       element.appendChild(childElement);
     });
   },
   runOnCreate: function runOnCreate(component) {
     postRenderJobs.push(function () {
-      if (component.isNew) {
+      if (!component.isOld) {
         component.onCreate.bind(component)();
         component.rerender();
       }
 
-      component.isNew = false;
+      component.isOld = true;
     });
   }
 };
@@ -403,6 +408,7 @@ var State = /*#__PURE__*/function () {
   _createClass(State, [{
     key: "subscribe",
     value: function subscribe(component, variable) {
+      console.log('subscribe', component, variable);
       if (!this.subscriptions[variable]) this.subscriptions[variable] = [];
       if (this.subscriptions[variable].includes(component)) return;
       this.subscriptions[variable].push(component);
@@ -751,7 +757,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "49954" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "53119" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

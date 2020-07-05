@@ -127,30 +127,122 @@ exports.default = void 0;
 
 function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-var Component = function Component(tag) {
-  _classCallCheck(this, Component);
+function _defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } }
 
-  this.tag = tag;
-  this.id = null;
-  this.attributes = {};
-  this.localState = {};
-  this.events = {};
-  this.listeners = [];
+function _createClass(Constructor, protoProps, staticProps) { if (protoProps) _defineProperties(Constructor.prototype, protoProps); if (staticProps) _defineProperties(Constructor, staticProps); return Constructor; }
 
-  this.children = function () {
-    return [];
-  };
+var Component = /*#__PURE__*/function () {
+  function Component(tag) {
+    _classCallCheck(this, Component);
 
-  this.oldStyle = null;
+    this.tag = tag;
+    this.id = null;
+    this.attributes = {};
+    this.localState = {};
+    this.events = {};
+    this.listeners = [];
 
-  this.onCreate = function () {};
+    this.children = function () {
+      return [];
+    };
 
-  this.isNew = true;
+    this.oldStyle = null;
 
-  this.rerender = function () {};
-};
+    this.onCreate = function () {};
 
-exports.default = Component;
+    this.isOld = false;
+
+    this.rerender = function () {};
+  } // a proxy is used to override the behaviour of reading and writing attributes of an object
+  // for example, with a proxy we can allow the attribute of a component to be set using:
+  // <component>.<property>(<value>) [e.g. div().class('button')]
+  // which has the equivalent behaviour of component.attributes[property] = value (see setAttribute)
+
+
+  _createClass(Component, [{
+    key: "getProxy",
+    value: function getProxy() {
+      var component = this;
+      return new Proxy(component, {
+        // get is called whenever the attribute of an object is read such as in div().class or div().children
+        get: function get(_, property) {
+          // event, localState, listeners, children, onCreate, component are attributes reserved for special component behaviour
+          // if the component attribute is not one of these, then you are setting a DOM attribute
+          if (property === 'event') {
+            return this.getEventSetter();
+          } else if (property === 'localState') {
+            return this.setLocalState;
+          } else if (property === 'listeners') {
+            return this.setListeners;
+          } else if (property === 'children') {
+            return this.setChildren;
+          } else if (property === 'onCreate') {
+            return this.setOnCreate;
+          } else if (property === 'component') {
+            return component;
+          } else {
+            return this.getAttributeSetter(property);
+          }
+        },
+        getEventSetter: function getEventSetter() {
+          var proxy = this;
+          return new Proxy({}, {
+            get: function get(_, eventName) {
+              return function (handler) {
+                return proxy.setEventHandler(eventName, handler);
+              };
+            }
+          });
+        },
+        setEventHandler: function setEventHandler(eventName, handler) {
+          component.events[eventName] = handler;
+          return component.getProxy();
+        },
+        getAttributeSetter: function getAttributeSetter(property) {
+          var _this = this;
+
+          return function (value) {
+            _this.setAttribute(property, value);
+
+            return component.getProxy();
+          };
+        },
+        setAttribute: function setAttribute(property, value) {
+          component.attributes[property] = value;
+          return component.getProxy();
+        },
+        setLocalState: function setLocalState(localState) {
+          component.localState = new Proxy(localState, {
+            set: function set(target, key, value) {
+              target[key] = value;
+              console.log('Local State', key, '=', value);
+              component.rerender();
+              return true;
+            }
+          });
+          return component.getProxy();
+        },
+        setListeners: function setListeners(names) {
+          component.listeners = names;
+          return component.getProxy();
+        },
+        setChildren: function setChildren(children) {
+          component.children = children;
+          return component.getProxy();
+        },
+        setOnCreate: function setOnCreate(func) {
+          component.onCreate = func;
+          return component.getProxy();
+        }
+      });
+    }
+  }]);
+
+  return Component;
+}();
+
+var _default = Component;
+exports.default = _default;
 },{}],"../Framework/TextComponent.js":[function(require,module,exports) {
 "use strict";
 
@@ -189,12 +281,14 @@ var _default = {
     element && element.parentNode.replaceChild(render, element);
     var renderTime = Math.round(performance.now() - t0);
     renderTime > 10 && console.log('Render took', renderTime, 'ms id:', id);
+    this.runPostRenderJobs();
   },
   renderComponent: function renderComponent(component, id) {
     var _this = this;
 
-    // console.log('rendering component', component)
-    if (component.tag === null) return this.renderTextComponent(component);
+    if (component.tag === null) return this.renderTextComponent(component); // set the attribute id, create new if doesnt exist
+
+    if (!component.attributes) component.attributes = {};
     component.attributes.id = id;
 
     component.rerender = function () {
@@ -202,11 +296,18 @@ var _default = {
     };
 
     var element = document.createElement(component.tag);
-    this.setAttributes(element, component);
-    this.setChildren(element, component, id);
-    this.setEventHandlers(element, component);
-    this.runOnCreate(component);
+    if (component.attributes) this.setAttributes(element, component);
+    if (component.children) this.setChildren(element, component, id);
+    if (component.events) this.setEventHandlers(element, component);
+    if (component.onCreate) this.runOnCreate(component);
     return element;
+  },
+  runPostRenderJobs: function runPostRenderJobs() {
+    setTimeout(function () {
+      while (postRenderJobs.length !== 0) {
+        postRenderJobs.pop()();
+      }
+    }, 0);
   },
   renderTextComponent: function renderTextComponent(component) {
     return document.createTextNode(component.text);
@@ -227,14 +328,14 @@ var _default = {
       element.setAttribute('style', component.oldStyle);
     }
 
-    setTimeout(function () {
+    postRenderJobs.push(function () {
       if (component.attributes.style) {
         var style = component.attributes.style;
         var styleObject = typeof style === 'function' ? style.bind(component)() : style;
         element.setAttribute('style', styleObject);
         component.oldStyle = styleObject;
       }
-    }, 0);
+    });
   },
   setEventHandlers: function setEventHandlers(element, component) {
     var handlers = component.events;
@@ -243,6 +344,7 @@ var _default = {
       element.addEventListener(eventName, function (e) {
         handler.bind(component)(e);
         e.stopPropagation();
+        component.rerender();
       });
     });
   },
@@ -251,20 +353,22 @@ var _default = {
 
     var children = typeof component.children === 'function' ? component.children.bind(component)() : component.children;
     children.forEach(function (child, index) {
-      var childElement = _this2.renderComponent(child.component, id + '-' + index);
+      var childComponent = child.component ? child.component : child;
+
+      var childElement = _this2.renderComponent(childComponent, id + '-' + index);
 
       element.appendChild(childElement);
     });
   },
   runOnCreate: function runOnCreate(component) {
-    setTimeout(function () {
-      if (component.isNew) {
+    postRenderJobs.push(function () {
+      if (!component.isOld) {
         component.onCreate.bind(component)();
         component.rerender();
       }
 
-      component.isNew = false;
-    }, 1);
+      component.isOld = true;
+    });
   }
 };
 exports.default = _default;
@@ -291,7 +395,7 @@ var State = /*#__PURE__*/function () {
     this.state = new Proxy(state, {
       set: function set(target, key, value) {
         target[key] = value;
-        console.log('state', key, '=', value);
+        console.log('Global State', key, '=', value);
 
         _this.updateSubscribers(key);
 
@@ -304,6 +408,7 @@ var State = /*#__PURE__*/function () {
   _createClass(State, [{
     key: "subscribe",
     value: function subscribe(component, variable) {
+      console.log('subscribe', component, variable);
       if (!this.subscriptions[variable]) this.subscriptions[variable] = [];
       if (this.subscriptions[variable].includes(component)) return;
       this.subscriptions[variable].push(component);
@@ -342,88 +447,17 @@ Object.defineProperty(exports, "State", {
 });
 exports.h6 = exports.h5 = exports.h4 = exports.h3 = exports.h2 = exports.h1 = exports.br = exports.div = exports.text = void 0;
 
-var _Component = _interopRequireDefault(require("./Component"));
+var _Component = _interopRequireDefault(require("./Component.js"));
 
-var _TextComponent = _interopRequireDefault(require("./TextComponent"));
+var _TextComponent = _interopRequireDefault(require("./TextComponent.js"));
 
-var _Renderer = _interopRequireDefault(require("./Renderer"));
+var _Renderer = _interopRequireDefault(require("./Renderer.js"));
 
-var _State = _interopRequireDefault(require("./State"));
+var _State = _interopRequireDefault(require("./State.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var componentProxy = function componentProxy(component) {
-  return new Proxy(component, {
-    get: function get(_, property) {
-      if (property === 'event') {
-        return this.getEventSetter();
-      } else if (property === 'localState') {
-        return this.setLocalState;
-      } else if (property === 'listeners') {
-        return this.setListeners;
-      } else if (property === 'children') {
-        return this.setChildren;
-      } else if (property === 'onCreate') {
-        return this.setOnCreate;
-      } else if (property === 'component') {
-        return component;
-      } else {
-        return this.getAttributeSetter(property);
-      }
-    },
-    getEventSetter: function getEventSetter() {
-      var self = this;
-      return new Proxy({}, {
-        get: function get(_, eventName) {
-          return function (handler) {
-            return self.setEventHandler(eventName, handler);
-          };
-        }
-      });
-    },
-    setEventHandler: function setEventHandler(eventName, handler) {
-      component.events[eventName] = handler;
-      return componentProxy(component);
-    },
-    getAttributeSetter: function getAttributeSetter(property) {
-      var _this = this;
-
-      return function (value) {
-        _this.setAttribute(property, value);
-
-        return componentProxy(component);
-      };
-    },
-    setAttribute: function setAttribute(property, value) {
-      component.attributes[property] = value;
-      return componentProxy(component);
-    },
-    setLocalState: function setLocalState(localState) {
-      component.localState = new Proxy(localState, {
-        set: function set(target, key, value) {
-          target[key] = value;
-          console.log('localState', key, '=', value);
-          component.rerender();
-          return true;
-        }
-      });
-      return componentProxy(component);
-    },
-    setListeners: function setListeners(names) {
-      component.listeners = names;
-      return componentProxy(component);
-    },
-    setChildren: function setChildren(children) {
-      component.children = children;
-      return componentProxy(component);
-    },
-    setOnCreate: function setOnCreate(func) {
-      component.onCreate = func;
-      return componentProxy(component);
-    }
-  });
-};
-
+// the framework exports all the html tags
 var text = function text(content) {
   return {
     component: new _TextComponent.default(content)
@@ -433,53 +467,53 @@ var text = function text(content) {
 exports.text = text;
 
 var div = function div() {
-  return componentProxy(new _Component.default('div'));
+  return new _Component.default('div').getProxy();
 };
 
 exports.div = div;
 
 var br = function br() {
-  return componentProxy(new _Component.default('br'));
+  return new _Component.default('br').getProxy();
 };
 
 exports.br = br;
 
 var h1 = function h1() {
-  return componentProxy(new _Component.default('h1'));
+  return new _Component.default('h1').getProxy();
 };
 
 exports.h1 = h1;
 
 var h2 = function h2() {
-  return componentProxy(new _Component.default('h2'));
+  return new _Component.default('h2').getProxy();
 };
 
 exports.h2 = h2;
 
 var h3 = function h3() {
-  return componentProxy(new _Component.default('h3'));
+  return new _Component.default('h3').getProxy();
 };
 
 exports.h3 = h3;
 
 var h4 = function h4() {
-  return componentProxy(new _Component.default('h4'));
+  return new _Component.default('h4').getProxy();
 };
 
 exports.h4 = h4;
 
 var h5 = function h5() {
-  return componentProxy(new _Component.default('h5'));
+  return new _Component.default('h5').getProxy();
 };
 
 exports.h5 = h5;
 
 var h6 = function h6() {
-  return componentProxy(new _Component.default('h6'));
+  return new _Component.default('h6').getProxy();
 };
 
 exports.h6 = h6;
-},{"./Component":"../Framework/Component.js","./TextComponent":"../Framework/TextComponent.js","./Renderer":"../Framework/Renderer.js","./State":"../Framework/State.js"}],"components/Example1.js":[function(require,module,exports) {
+},{"./Component.js":"../Framework/Component.js","./TextComponent.js":"../Framework/TextComponent.js","./Renderer.js":"../Framework/Renderer.js","./State.js":"../Framework/State.js"}],"components/Example1.js":[function(require,module,exports) {
 "use strict";
 
 Object.defineProperty(exports, "__esModule", {
@@ -702,24 +736,116 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 var _default = (0, _Framework.div)().class('example').children([_Example7CountDisplay.default, (0, _Example7Child.default)(1), (0, _Framework.br)(), (0, _Example7Child.default)(2)]);
 
 exports.default = _default;
-},{"../../Framework/Framework":"../Framework/Framework.js","./Example7Child":"components/Example7Child.js","./Example7CountDisplay":"components/Example7CountDisplay.js"}],"index.js":[function(require,module,exports) {
+},{"../../Framework/Framework":"../Framework/Framework.js","./Example7Child":"components/Example7Child.js","./Example7CountDisplay":"components/Example7CountDisplay.js"}],"components/Example7ChildJSON.js":[function(require,module,exports) {
 "use strict";
 
-var _Framework = require("../Framework/Framework");
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 
-var _Example = _interopRequireDefault(require("./components/Example1"));
+var _state = _interopRequireDefault(require("./state.js"));
 
-var _Example2 = _interopRequireDefault(require("./components/Example2"));
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-var _Example3 = _interopRequireDefault(require("./components/Example3"));
+var _default = function _default(number) {
+  return {
+    tag: 'div',
+    localState: {
+      count: 0
+    },
+    events: {
+      click: function click() {
+        this.localState.count++;
 
-var _Example4 = _interopRequireDefault(require("./components/Example4"));
+        _state.default.state.incrementCount(number);
+      }
+    },
+    children: function children() {
+      return [{
+        tag: 'h2',
+        children: [{
+          tag: null,
+          text: 'child ' + number
+        }]
+      }, {
+        tag: null,
+        text: "I increase the total count by ".concat(number, ". click count: ").concat(this.localState.count, ".")
+      }];
+    }
+  };
+};
 
-var _Example5 = _interopRequireDefault(require("./components/Example5"));
+exports.default = _default;
+},{"./state.js":"components/state.js"}],"components/Example7CountDisplayJSON.js":[function(require,module,exports) {
+"use strict";
 
-var _Example6 = _interopRequireDefault(require("./components/Example6"));
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
 
-var _Example7 = _interopRequireDefault(require("./components/Example7"));
+var _state = _interopRequireDefault(require("./state.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = {
+  tag: 'h1',
+  onCreate: function onCreate() {
+    _state.default.subscribe(this, 'totalCount');
+  },
+  children: function children() {
+    return [{
+      tag: null,
+      text: 'Total count: ' + _state.default.state.totalCount
+    }];
+  }
+};
+exports.default = _default;
+},{"./state.js":"components/state.js"}],"components/Example7JSON.js":[function(require,module,exports) {
+"use strict";
+
+Object.defineProperty(exports, "__esModule", {
+  value: true
+});
+exports.default = void 0;
+
+var _Example7ChildJSON = _interopRequireDefault(require("./Example7ChildJSON.js"));
+
+var _Example7CountDisplayJSON = _interopRequireDefault(require("./Example7CountDisplayJSON.js"));
+
+function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+var _default = {
+  tag: 'div',
+  attributes: {
+    class: 'example'
+  },
+  children: [_Example7CountDisplayJSON.default, (0, _Example7ChildJSON.default)(1), {
+    tag: 'br'
+  }, (0, _Example7ChildJSON.default)(2)]
+};
+exports.default = _default;
+},{"./Example7ChildJSON.js":"components/Example7ChildJSON.js","./Example7CountDisplayJSON.js":"components/Example7CountDisplayJSON.js"}],"index.js":[function(require,module,exports) {
+"use strict";
+
+var _Framework = require("../Framework/Framework.js");
+
+var _Example = _interopRequireDefault(require("./components/Example1.js"));
+
+var _Example2 = _interopRequireDefault(require("./components/Example2.js"));
+
+var _Example3 = _interopRequireDefault(require("./components/Example3.js"));
+
+var _Example4 = _interopRequireDefault(require("./components/Example4.js"));
+
+var _Example5 = _interopRequireDefault(require("./components/Example5.js"));
+
+var _Example6 = _interopRequireDefault(require("./components/Example6.js"));
+
+var _Example7 = _interopRequireDefault(require("./components/Example7.js"));
+
+var _Example7JSON = _interopRequireDefault(require("./components/Example7JSON.js"));
 
 function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
@@ -729,8 +855,8 @@ function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { de
 // Renderer.render(Example4, 'app')
 // Renderer.render(Example5, 'app')
 // Renderer.render(Example6, 'app')
-_Framework.Renderer.render(_Example7.default, 'app');
-},{"../Framework/Framework":"../Framework/Framework.js","./components/Example1":"components/Example1.js","./components/Example2":"components/Example2.js","./components/Example3":"components/Example3.js","./components/Example4":"components/Example4.js","./components/Example5":"components/Example5.js","./components/Example6":"components/Example6.js","./components/Example7":"components/Example7.js"}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
+_Framework.Renderer.render(_Example7.default, 'app'); // Renderer.render(Example7JSON, 'app', false)
+},{"../Framework/Framework.js":"../Framework/Framework.js","./components/Example1.js":"components/Example1.js","./components/Example2.js":"components/Example2.js","./components/Example3.js":"components/Example3.js","./components/Example4.js":"components/Example4.js","./components/Example5.js":"components/Example5.js","./components/Example6.js":"components/Example6.js","./components/Example7.js":"components/Example7.js","./components/Example7JSON.js":"components/Example7JSON.js"}],"../../../AppData/Roaming/npm/node_modules/parcel-bundler/src/builtins/hmr-runtime.js":[function(require,module,exports) {
 var global = arguments[3];
 var OVERLAY_ID = '__parcel__error__overlay__';
 var OldModule = module.bundle.Module;
@@ -758,7 +884,7 @@ var parent = module.bundle.parent;
 if ((!parent || !parent.isParcelRequire) && typeof WebSocket !== 'undefined') {
   var hostname = "" || location.hostname;
   var protocol = location.protocol === 'https:' ? 'wss' : 'ws';
-  var ws = new WebSocket(protocol + '://' + hostname + ':' + "54376" + '/');
+  var ws = new WebSocket(protocol + '://' + hostname + ':' + "51792" + '/');
 
   ws.onmessage = function (event) {
     checkedAssets = {};

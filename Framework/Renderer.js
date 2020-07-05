@@ -25,10 +25,10 @@ export default {
 
         const element = document.createElement(component.tag)
 
-        this.setAttributes(element, component)
-        this.setChildren(element, component, id)
-        this.setEventHandlers(element, component)
-        this.runOnCreate(component)
+        if (component.attributes) this.setAttributes(element, component)
+        if (component.children) this.setChildren(element, component, id)
+        if (component.events) this.setEventHandlers(element, component)
+        if (component.onCreate) this.runOnCreate(component)
 
         return element
     },
@@ -71,25 +71,27 @@ export default {
             element.addEventListener(eventName, e => {
                 handler.bind(component)(e)
                 e.stopPropagation()
+                component.rerender()
             })
         })
     },
     setChildren(element, component, id) {
         const children = typeof(component.children) === 'function' ?
-            component.children.bind(component)():
+            component.children.bind(component)() :
             component.children
         children.forEach((child, index) => {
-            const childElement = this.renderComponent(child.component, id + '-' + index)
+            const childComponent = child.component ? child.component : child
+            const childElement = this.renderComponent(childComponent, id + '-' + index)
             element.appendChild(childElement)
         })
     },
     runOnCreate(component) {
         postRenderJobs.push(() => {
-            if (component.isNew) {
+            if (!component.isOld) {
                 component.onCreate.bind(component)()
                 component.rerender()
             }
-            component.isNew = false
+            component.isOld = true
         })
     }
 }

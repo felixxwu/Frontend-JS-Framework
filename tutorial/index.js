@@ -1,12 +1,13 @@
-import { Renderer } from '../Framework/Framework'
+import { Renderer } from '../Framework/Framework.js'
 
-import Example1 from './components/Example1'
-import Example2 from './components/Example2'
-import Example3 from './components/Example3'
-import Example4 from './components/Example4'
-import Example5 from './components/Example5'
-import Example6 from './components/Example6'
-import Example7 from './components/Example7'
+import Example1 from './components/Example1.js'
+import Example2 from './components/Example2.js'
+import Example3 from './components/Example3.js'
+import Example4 from './components/Example4.js'
+import Example5 from './components/Example5.js'
+import Example6 from './components/Example6.js'
+import Example7 from './components/Example7.js'
+import Example7JSON from './components/Example7JSON.js'
 
 // Renderer.render(Example1, 'app')
 // Renderer.render(Example2, 'app')
@@ -15,3 +16,4 @@ import Example7 from './components/Example7'
 // Renderer.render(Example5, 'app')
 // Renderer.render(Example6, 'app')
 Renderer.render(Example7, 'app')
+// Renderer.render(Example7JSON, 'app', false)

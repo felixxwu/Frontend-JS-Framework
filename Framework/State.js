@@ -11,6 +11,7 @@ export default class State {
         this.subscriptions = {}
     }
     subscribe(component, variable) {
+        console.log(`Subscribed component to variable ${variable}. Component:`, component)
         if (!this.subscriptions[variable]) this.subscriptions[variable] = []
         if (this.subscriptions[variable].includes(component)) return
         this.subscriptions[variable].push(component)

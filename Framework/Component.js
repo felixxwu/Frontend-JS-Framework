@@ -9,7 +9,7 @@ const Component = class Component {
         this.children = () => []
         this.oldStyle = null
         this.onCreate = () => {}
-        this.isNew = true
+        this.isOld = false
         this.rerender = () => {}
     }
 
